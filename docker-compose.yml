@@ -1,0 +1,35 @@
+services:
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Build configuration
+        - NODE_ENV=${NODE_ENV}
+        - NEXT_TELEMETRY_DISABLED=${NEXT_TELEMETRY_DISABLED}
+        # Runtime secrets (needed for build validation)
+        - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+        - SESSION_SECRET=${SESSION_SECRET}
+        - SESSION_DURATION=${SESSION_DURATION}
+        - ADMIN_USER_ID=${ADMIN_USER_ID}
+    container_name: cyberstories-app
+    restart: unless-stopped
+    ports:
+      - "${PORT}:${PORT}"
+    # Runtime environment variables loaded from both .env and .env.local
+    # .env = Docker/build configuration (ports, etc.)
+    # .env.local = Next.js secrets (passwords, session secrets)
+    env_file:
+      - .env           # Docker configuration (safe to commit)
+      - .env.local     # Next.js secrets (DO NOT commit)
+    volumes:
+      # Persist blog content (read-write for admin uploads)
+      - ./content/blog:/app/content/blog
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT}/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
