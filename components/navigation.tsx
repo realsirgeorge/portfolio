@@ -2,114 +2,151 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X, Terminal, Sun, Moon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
+import { Menu, X, Sun, Moon } from "lucide-react";
+import { NAV_LINKS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/work", label: "Work" },
-  { href: "/infrastructure", label: "Lab" },
-  { href: "/library", label: "Library" },
-  { href: "/blog", label: "Blog" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-];
+export function Wordmark({ className }: { className?: string }) {
+  return (
+    <span className={cn("flex items-center gap-3", className)}>
+      <span
+        aria-hidden="true"
+        className="grid h-8 w-8 place-items-center rounded-[5px] bg-foreground text-background font-display text-[0.95rem] leading-none tracking-tight"
+      >
+        GW
+      </span>
+      <span className="flex flex-col leading-none">
+        <span className="font-display text-[1.0625rem] tracking-tight text-foreground">
+          George Wanyoike
+        </span>
+        <span className="mt-1 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-muted-foreground">
+          Sir G · Nairobi
+        </span>
+      </span>
+    </span>
+  );
+}
 
-export function Navigation() {
-  const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted && resolvedTheme === "dark";
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-            <div className="w-8 h-8 rounded border border-primary/50 flex items-center justify-center bg-primary/10 group-hover:bg-primary/20 transition-colors">
-              <Terminal className="w-4 h-4 text-primary" />
-            </div>
-            <span className="font-mono text-sm text-foreground">
-              george@security
-            </span>
-          </Link>
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="grid h-10 w-10 place-items-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+      aria-label={mounted ? `Switch to ${isDark ? "light" : "dark"} theme` : "Toggle theme"}
+    >
+      {mounted ? (
+        isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />
+      ) : (
+        <span className="h-[18px] w-[18px]" />
+      )}
+    </button>
+  );
+}
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+export function Navigation() {
+  const pathname = usePathname() || "/";
+  const [open, setOpen] = useState(false);
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+
+  // Close the sheet on navigation and on Escape; lock scroll while open.
+  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  return (
+    <header
+      data-site-header
+      className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75"
+    >
+      <nav aria-label="Primary" className="container-page flex h-16 items-center justify-between gap-6">
+        <Link href="/" className="shrink-0 rounded-sm" aria-label="George Wanyoike, home">
+          <Wordmark />
+        </Link>
+
+        <ul className="hidden items-center gap-1 lg:flex">
+          {NAV_LINKS.map((link) => (
+            <li key={link.href}>
               <Link
-                key={link.href}
                 href={link.href}
+                aria-current={isActive(link.href) ? "page" : undefined}
                 className={cn(
-                  "px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer",
+                  "relative rounded-sm px-3 py-2 text-[0.9375rem] transition-colors",
                   isActive(link.href)
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "text-foreground after:absolute after:inset-x-3 after:-bottom-[1px] after:h-px after:bg-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {link.label}
               </Link>
-            ))}
-          </div>
+            </li>
+          ))}
+        </ul>
 
-          {/* Theme Toggle & Mobile Menu */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden text-muted-foreground hover:text-foreground"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </div>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Link
+            href="/contact"
+            className="btn btn-ghost hidden !min-h-9 !py-1.5 text-sm lg:inline-flex"
+          >
+            Contact
+          </Link>
+          <button
+            type="button"
+            className="grid h-10 w-10 place-items-center rounded-md text-foreground lg:hidden"
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border/50 py-4">
-            <div className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer",
-                    isActive(link.href)
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </nav>
+
+      {open && (
+        <div
+          id="mobile-nav"
+          className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 overflow-y-auto border-t border-border bg-background"
+        >
+          <ul className="container-page flex flex-col py-6">
+            {[...NAV_LINKS, { href: "/resume", label: "Resume" }, { href: "/contact", label: "Contact" }].map(
+              (link) => (
+                <li key={link.href} className="border-b border-border/70">
+                  <Link
+                    href={link.href}
+                    aria-current={isActive(link.href) ? "page" : undefined}
+                    className={cn(
+                      "flex items-center justify-between py-4 font-display text-2xl",
+                      isActive(link.href) ? "text-primary" : "text-foreground"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              )
+            )}
+          </ul>
+        </div>
+      )}
     </header>
   );
 }

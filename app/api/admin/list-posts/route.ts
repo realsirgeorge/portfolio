@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all posts (both .ts and .md)
-    const allPosts = getAllPosts();
+    const allPosts = getAllPosts({ includeDrafts: true });
     
     // Get markdown posts to identify which posts are markdown
     const markdownPosts = getMarkdownPosts();
@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       featured: post.featured,
       excerpt: post.excerpt,
       readTime: post.readTime,
+      draft: post.draft === true,
       isMarkdown: markdownSlugs.has(post.slug), // Flag to indicate if post is markdown
     }));
 

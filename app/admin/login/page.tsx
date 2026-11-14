@@ -7,8 +7,6 @@ import { Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Navigation } from "@/components/navigation";
-import { Footer } from "@/components/footer";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,9 +46,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="pt-24 pb-16">
+    <div>
+      <div className="pb-16">
         <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
           <div className="p-8 rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm">
             <div className="mb-8 text-center">
@@ -103,8 +100,7 @@ export default function LoginPage() {
             </form>
           </div>
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }

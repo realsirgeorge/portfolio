@@ -30,8 +30,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Navigation } from "@/components/navigation";
-import { Footer } from "@/components/footer";
 
 // Frontmatter data interface
 interface FrontmatterData {
@@ -63,9 +61,6 @@ function parseFrontmatter(content: string): { data: FrontmatterData; content: st
 
   // Simple YAML-like parsing (basic key-value pairs)
   const data: FrontmatterData = {};
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bb6b65b1-634c-40bd-9652-b0ebb50ba0b8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/admin/page.tsx:39',message:'Before parsing frontmatter',data:{frontmatterLength:frontmatter.length,frontmatterPreview:frontmatter.slice(0,100)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2,H5'})}).catch(()=>{});
-  // #endregion
   frontmatter.split("\n").forEach((line) => {
     const colonIndex = line.indexOf(":");
     if (colonIndex > 0) {
@@ -90,9 +85,6 @@ function parseFrontmatter(content: string): { data: FrontmatterData; content: st
       data[key] = value;
     }
   });
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bb6b65b1-634c-40bd-9652-b0ebb50ba0b8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/admin/page.tsx:65',message:'After parsing frontmatter',data:{parsedKeys:Object.keys(data),dataStructure:JSON.stringify(data),titleValue:data.title,titleType:typeof data.title},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2,H5'})}).catch(()=>{});
-  // #endregion
 
   return { data, content: body };
 }
@@ -373,7 +365,7 @@ End your post here.`;
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-[50vh] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -384,9 +376,8 @@ End your post here.`;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="pt-24 pb-16">
+    <div>
+      <div className="pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
@@ -750,33 +741,25 @@ End your post here.`;
                   <div className="space-y-4">
                     <div className="pb-4 border-b border-border/50">
                       <h3 className="text-xl font-bold text-foreground mb-2">
-                        {/* #region agent log */}
-                        {(() => { fetch('http://127.0.0.1:7242/ingest/bb6b65b1-634c-40bd-9652-b0ebb50ba0b8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/admin/page.tsx:381',message:'Rendering title',data:{title:previewData.data.title,titleType:typeof previewData.data.title,hasTitle:!!previewData.data.title},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1,H3'})}).catch(()=>{}); return String(previewData.data.title || "Untitled"); })()}
-                        {/* #endregion */}
+                        {String(previewData.data.title || "Untitled")}
                       </h3>
                       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                         {previewData.data.date && (
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {/* #region agent log */}
-                            {(() => { fetch('http://127.0.0.1:7242/ingest/bb6b65b1-634c-40bd-9652-b0ebb50ba0b8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/admin/page.tsx:387',message:'Rendering date',data:{date:previewData.data.date,dateType:typeof previewData.data.date},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{}); return String(previewData.data.date); })()}
-                            {/* #endregion */}
+                            {String(previewData.data.date)}
                           </span>
                         )}
                         {previewData.data.category && (
                           <span className="flex items-center gap-1">
                             <Tag className="w-3 h-3" />
-                            {/* #region agent log */}
-                            {(() => { fetch('http://127.0.0.1:7242/ingest/bb6b65b1-634c-40bd-9652-b0ebb50ba0b8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/admin/page.tsx:393',message:'Rendering category',data:{category:previewData.data.category,categoryType:typeof previewData.data.category},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{}); return String(previewData.data.category); })()}
-                            {/* #endregion */}
+                            {String(previewData.data.category)}
                           </span>
                         )}
                       </div>
                       {previewData.data.excerpt && (
                         <p className="mt-2 text-sm text-muted-foreground">
-                          {/* #region agent log */}
-                          {(() => { fetch('http://127.0.0.1:7242/ingest/bb6b65b1-634c-40bd-9652-b0ebb50ba0b8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/admin/page.tsx:399',message:'Rendering excerpt',data:{excerpt:previewData.data.excerpt,excerptType:typeof previewData.data.excerpt},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{}); return String(previewData.data.excerpt); })()}
-                          {/* #endregion */}
+                          {String(previewData.data.excerpt)}
                         </p>
                       )}
                     </div>
@@ -1064,8 +1047,7 @@ End your post here.`;
             </div>
           )}
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }

@@ -27,9 +27,13 @@ const legacyPosts: BlogPost[] = [
   localAuthorityPico,
 ];
 
-// Get all posts (merge legacy .ts and new .md posts)
-export function getAllBlogPosts(): BlogPost[] {
-  const markdownPosts = getMarkdownPosts();
+// Get all posts (merge legacy .ts and new .md posts).
+// Drafts (frontmatter `draft: true`) are excluded unless includeDrafts is set,
+// which only the authenticated admin listing does.
+export function getAllBlogPosts(options: { includeDrafts?: boolean } = {}): BlogPost[] {
+  const markdownPosts = getMarkdownPosts().filter(
+    (p) => options.includeDrafts || !p.draft
+  );
   
   // Merge both sources, avoiding duplicates by slug
   const allPosts = [...legacyPosts];
@@ -59,8 +63,9 @@ export function getBlogPost(slug: string): BlogPost | undefined {
     return legacyPost;
   }
   
-  // Then check markdown posts
-  return getMarkdownPost(slug);
+  // Then check markdown posts (drafts are never served publicly)
+  const post = getMarkdownPost(slug);
+  return post && !post.draft ? post : undefined;
 }
 
 // Helper function to get posts with optional filtering

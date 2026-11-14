@@ -54,6 +54,9 @@ export const PROFILE = {
   name: "George Wanyoike Njoroge",
   alias: "Sir G",
   location: "Nairobi, Kenya",
+  // TODO(owner): confirm george@knight-labs.co is still a live mailbox. The firm's
+  // published domain is knightlabs.co.ke; the site now shows emailAlt for
+  // personal contact and routes business mail to hello@knightlabs.co.ke.
   email: "george@knight-labs.co",
   emailAlt: "realsirgeorge@gmail.com",
   phone: "+254 707 853 938",
@@ -67,6 +70,13 @@ export const PROFILE = {
 } as const;
 
 export const ROLES = [
+  {
+    title: "Founder",
+    org: "Knight Labs",
+    detail:
+      "A Nairobi cybersecurity practice for SACCOs, clinics, schools, property managers and growing corporates. Assessment, testing, audit, advisory and incident response, with every proposal and report reviewed personally.",
+    href: "/knight-labs",
+  },
   {
     title: "Digital Platforms Assurance",
     org: "National airport parking services operator",
@@ -449,7 +459,7 @@ export const ENGAGEMENTS: Engagement[] = [
     ],
     whyItMatters:
       "My strongest answer to the charge that security people do not run production. I carry the pager for it.",
-    external: { href: PROFILE.anga, label: "anganetworks.co.ke" },
+    external: { href: PROFILE.anga, label: "Anga Networks website" },
     featured: true,
   },
   {

@@ -39,6 +39,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (file.size > 5 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: 'File exceeds maximum size (5MB)' },
+          { status: 413 }
+        );
+      }
+
       // Read file content
       const arrayBuffer = await file.arrayBuffer();
       markdownContent = Buffer.from(arrayBuffer).toString('utf-8');

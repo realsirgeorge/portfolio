@@ -8,6 +8,8 @@ export interface BlogPost {
   readTime: string;
   featured: boolean;
   content: string;
+  /** Drafts are hidden from the public site and listed only in the admin. */
+  draft?: boolean;
 }
 
 export const categories = [

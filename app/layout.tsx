@@ -1,33 +1,77 @@
 import React from "react";
 import type { Metadata, Viewport } from "next";
-import { Analytics } from "@vercel/analytics/next";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Navigation } from "@/components/navigation";
+import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
+import { PROFILE } from "@/lib/portfolio-data";
+import { KNIGHT_LABS, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://realsirgeorge.co"),
-  title: {
-    default: "George Wanyoike Njoroge — Security practitioner",
-    template: "%s — George Wanyoike Njoroge",
-  },
-  description:
-    "A security practitioner who builds the systems he breaks. Full-lifecycle offensive engagements, a production ISP in Kenya, and a published engagement methodology.",
-  keywords: [
-    "penetration testing",
-    "security audit",
-    "network engineering",
-    "ISP operations",
-    "edge AI security",
-    "Nairobi",
+/* Self-hosted OFL fonts (licences in app/fonts). No third-party font CDN. */
+const newsreader = localFont({
+  src: [
+    { path: "./fonts/newsreader-latin-opsz-normal.woff2", style: "normal", weight: "200 800" },
+    { path: "./fonts/newsreader-latin-opsz-italic.woff2", style: "italic", weight: "200 800" },
   ],
-  authors: [{ name: "George Wanyoike Njoroge" }],
+  variable: "--font-newsreader",
+  display: "swap",
+});
+
+const plexSans = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-sans-latin-wght-normal.woff2", style: "normal", weight: "100 700" },
+    { path: "./fonts/ibm-plex-sans-latin-wght-italic.woff2", style: "italic", weight: "100 700" },
+  ],
+  variable: "--font-plex-sans",
+  display: "swap",
+});
+
+const plexMono = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", style: "normal", weight: "400" },
+    { path: "./fonts/ibm-plex-mono-latin-500-normal.woff2", style: "normal", weight: "500" },
+  ],
+  variable: "--font-plex-mono",
+  display: "swap",
+});
+
+const DESCRIPTION =
+  "George Wanyoike (Sir G) is a Nairobi security practitioner and the founder of Knight Labs. Full-lifecycle security audits, a production ISP, and the methodology behind both.";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "George Wanyoike — Security practitioner, founder of Knight Labs",
+    template: "%s — George Wanyoike",
+  },
+  description: DESCRIPTION,
+  applicationName: "George Wanyoike",
+  keywords: [
+    "George Wanyoike",
+    "Sir G",
+    "Knight Labs",
+    "penetration testing Kenya",
+    "security audit",
+    "cybersecurity Nairobi",
+    "network engineering",
+  ],
+  authors: [{ name: PROFILE.name, url: SITE_URL }],
+  creator: PROFILE.name,
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "George Wanyoike Njoroge — Security practitioner",
-    description:
-      "A security practitioner who builds the systems he breaks. Engagements, infrastructure, and a published methodology.",
     type: "website",
     locale: "en_KE",
+    url: SITE_URL,
+    siteName: "George Wanyoike",
+    title: "George Wanyoike — Security practitioner, founder of Knight Labs",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "George Wanyoike — Security practitioner",
+    description: DESCRIPTION,
   },
   icons: {
     icon: [
@@ -41,11 +85,44 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1419" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f2ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1113" },
   ],
   width: "device-width",
   initialScale: 1,
+};
+
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `${SITE_URL}/#person`,
+  name: PROFILE.name,
+  alternateName: ["George Wanyoike", PROFILE.alias],
+  url: SITE_URL,
+  jobTitle: "Founder, Knight Labs",
+  description: DESCRIPTION,
+  worksFor: {
+    "@type": "Organization",
+    name: KNIGHT_LABS.name,
+    url: KNIGHT_LABS.url,
+  },
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Nairobi",
+    addressCountry: "KE",
+  },
+  alumniOf: {
+    "@type": "CollegeOrUniversity",
+    name: "Jomo Kenyatta University of Agriculture and Technology",
+  },
+  knowsAbout: [
+    "Penetration testing",
+    "Security auditing",
+    "Network engineering",
+    "MikroTik RouterOS",
+    "Application security",
+  ],
+  sameAs: [PROFILE.linkedin, PROFILE.github.replace(/\/$/, "")],
 };
 
 export default function RootLayout({
@@ -54,36 +131,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        />
-      </head>
-      <body className="font-sans antialiased">
+    <html
+      lang="en-KE"
+      suppressHydrationWarning
+      className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable}`}
+    >
+      <body className="font-sans antialiased min-h-screen flex flex-col">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded focus:bg-foreground focus:px-4 focus:py-2 focus:text-background"
         >
           Skip to content
         </a>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <Navigation />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <Footer />
         </ThemeProvider>
         <Toaster position="top-right" richColors />
-        <Analytics />
+        <script
+          type="application/ld+json"
+          // Static, build-time data only; no user input reaches this.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
       </body>
     </html>
   );

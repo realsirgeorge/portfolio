@@ -41,6 +41,13 @@ export function TerminalWindow({
 
   const introDone = visibleLines >= lines.length;
 
+  // Readers who ask for reduced motion get the whole intro at once.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisibleLines(lines.length);
+    }
+  }, [lines.length]);
+
   // Auto-play the intro lines
   useEffect(() => {
     if (visibleLines < lines.length) {
@@ -69,6 +76,7 @@ export function TerminalWindow({
           return [
             "Available commands:",
             "  whoami            who you're talking to",
+            "  knightlabs        the firm I founded",
             "  ls                list sections of this site",
             "  cat <section>     summarize a section",
             "  open <section>    navigate there",
@@ -78,11 +86,18 @@ export function TerminalWindow({
           ];
         case "whoami":
           return [
-            "george_wanyoike — security practitioner & ISP operator",
+            "george_wanyoike — security practitioner, founder of Knight Labs",
             "I build the systems I break.",
           ];
+        case "knightlabs":
+        case "knight-labs":
+          return [
+            "Knight Labs — cybersecurity for SACCOs, clinics, schools,",
+            "property managers and growing corporates. Assess, Test, Audit,",
+            "Advise, Respond. Business enquiries go there. `open knight-labs`.",
+          ];
         case "ls":
-          return ["work/   lab/   library/   blog/   about/   contact/"];
+          return ["work/   knight-labs/   lab/   library/   blog/   about/   resume/   contact/"];
         case "pwd":
           return ["/home/george/portfolio"];
         case "stack":
@@ -93,9 +108,9 @@ export function TerminalWindow({
           ];
         case "contact":
           return [
-            "email  : george@knight-labs.co",
-            "alt    : realsirgeorge@gmail.com",
-            "type 'open contact' to send a message",
+            "business : hello@knightlabs.co.ke (Knight Labs)",
+            "personal : realsirgeorge@gmail.com",
+            "type 'open contact' for everything else",
           ];
         case "cat": {
           const sections: Record<string, string[]> = {
@@ -112,7 +127,8 @@ export function TerminalWindow({
             ],
             blog: ["CTF writeups, technique notes, tooling. `open blog`."],
             about: ["Background, capabilities, certifications. `open about`."],
-            contact: ["george@knight-labs.co · `open contact`."],
+            contact: ["Business via Knight Labs, personal via `open contact`."],
+            "knight-labs": ["The firm I founded. `open knight-labs`."],
           };
           if (!arg) return ["usage: cat <section> — try 'ls' first"];
           return (
@@ -124,6 +140,8 @@ export function TerminalWindow({
         case "open": {
           const routes: Record<string, string> = {
             work: "/work",
+            "knight-labs": "/knight-labs",
+            knightlabs: "/knight-labs",
             lab: "/infrastructure",
             infrastructure: "/infrastructure",
             library: "/library",
@@ -187,21 +205,21 @@ export function TerminalWindow({
 
   return (
     <div
-      className={`rounded-lg border border-border bg-card/50 backdrop-blur-sm overflow-hidden ${className}`}
+      className={`overflow-hidden rounded-lg border border-white/10 bg-[#0b0e10] text-[#e6e1d6] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.45)] ${className}`}
       onClick={() => introDone && inputRef.current?.focus()}
     >
       {/* Terminal Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
-        <div className="flex gap-2">
-          <div className="w-3 h-3 rounded-full bg-destructive/80" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-primary/80" />
+      <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
+        <div className="flex gap-1.5" aria-hidden="true">
+          <div className="h-2.5 w-2.5 rounded-full bg-white/15" />
+          <div className="h-2.5 w-2.5 rounded-full bg-white/15" />
+          <div className="h-2.5 w-2.5 rounded-full bg-white/15" />
         </div>
-        <span className="text-xs text-muted-foreground font-mono ml-2">
+        <span className="ml-2 font-mono text-xs text-[#a7a297]">
           {title}
         </span>
         {interactive && introDone && (
-          <span className="ml-auto text-[0.65rem] text-muted-foreground/70 font-mono">
+          <span className="ml-auto font-mono text-[0.6875rem] text-[#a7a297]">
             type help
           </span>
         )}
@@ -210,24 +228,25 @@ export function TerminalWindow({
       {/* Terminal Content */}
       <div
         ref={scrollRef}
-        className="p-4 font-mono text-sm space-y-1 min-h-[280px] max-h-[280px] overflow-y-auto"
+        className="h-[268px] space-y-1 overflow-y-auto p-4 font-mono text-[0.8125rem] leading-relaxed"
+        aria-live="polite"
       >
         {/* Intro auto-play */}
         {lines.slice(0, visibleLines).map((line, index) => (
           <div key={index} className="flex items-start">
             {line.type === "command" && (
               <>
-                <span className="text-primary mr-2">$</span>
-                <span className="text-foreground break-all">{line.content}</span>
+                <span className="text-[#7fcca8] mr-2">$</span>
+                <span className="text-[#ece7dc] break-words">{line.content}</span>
               </>
             )}
             {line.type === "output" && (
-              <span className="text-muted-foreground pl-4 break-all">
+              <span className="text-[#a7a297] pl-4 break-words">
                 {line.content}
               </span>
             )}
             {line.type === "prompt" && (
-              <span className="text-foreground break-all">{line.content}</span>
+              <span className="text-[#ece7dc] break-words">{line.content}</span>
             )}
           </div>
         ))}
@@ -237,12 +256,12 @@ export function TerminalWindow({
           <div key={`h-${i}`}>
             {entry.input !== undefined && (
               <div className="flex items-start">
-                <span className="text-primary mr-2 shrink-0">{prompt}</span>
-                <span className="text-foreground break-all">{entry.input}</span>
+                <span className="text-[#7fcca8] mr-2 shrink-0">{prompt}</span>
+                <span className="text-[#ece7dc] break-words">{entry.input}</span>
               </div>
             )}
             {entry.output.map((o, j) => (
-              <div key={j} className="text-muted-foreground break-all pl-0">
+              <div key={j} className="text-[#a7a297] break-words pl-0">
                 {o}
               </div>
             ))}
@@ -252,7 +271,7 @@ export function TerminalWindow({
         {/* Live prompt */}
         {interactive && introDone ? (
           <form onSubmit={submit} className="flex items-center">
-            <span className="text-primary mr-2 shrink-0">{prompt}</span>
+            <span className="text-[#7fcca8] mr-2 shrink-0">{prompt}</span>
             <input
               ref={inputRef}
               value={input}
@@ -262,14 +281,14 @@ export function TerminalWindow({
               autoCapitalize="none"
               autoCorrect="off"
               aria-label="Terminal input. Type a command such as help."
-              className="flex-1 bg-transparent border-0 outline-none text-foreground caret-primary p-0 font-mono text-sm"
+              className="flex-1 bg-transparent border-0 outline-none text-[#ece7dc] caret-[#7fcca8] p-0 font-mono text-sm"
             />
           </form>
         ) : (
           !interactive &&
           introDone && (
             <div className="flex items-center">
-              <span className="text-primary mr-2">$</span>
+              <span className="text-[#7fcca8] mr-2">$</span>
               <span className="animate-pulse">_</span>
             </div>
           )

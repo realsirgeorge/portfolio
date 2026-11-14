@@ -72,6 +72,7 @@ function parseMarkdownFile(filePath: string, filename: string): BlogPost | null 
       readTime: data.readTime || calculateReadTime(content),
       featured: data.featured === true,
       content: content.trim(),
+      draft: data.draft === true || data.published === false,
     };
     
     return post;

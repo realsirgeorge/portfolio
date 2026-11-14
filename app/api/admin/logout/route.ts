@@ -2,25 +2,16 @@
 // POST /api/admin/logout
 
 import { NextRequest, NextResponse } from 'next/server';
-import { clearSessionCookie } from '@/lib/session';
+import { clearSessionCookie, revokeSession } from '@/lib/session';
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const response = NextResponse.json({
-      success: true,
-      message: 'Logout successful',
-    });
-
-    // Clear session cookie
+    revokeSession(request);
+    const response = NextResponse.json({ success: true, message: 'Logout successful' });
     clearSessionCookie(response);
-
     return response;
   } catch (error) {
     console.error('Logout error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

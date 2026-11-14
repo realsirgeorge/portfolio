@@ -1,41 +1,62 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Award, Mail, Phone, MapPin, Linkedin } from "lucide-react";
-import { Navigation } from "@/components/navigation";
-import { Footer } from "@/components/footer";
-import { PageHeader } from "@/components/page-header";
-import { PROFILE, PROGRAMS, ROLES } from "@/lib/portfolio-data";
+import { ArrowRight } from "lucide-react";
+import { PageHeader, SectionHeading } from "@/components/page-header";
+import { PROFILE, PROGRAMS } from "@/lib/portfolio-data";
+import { STANDARDS } from "@/lib/lab-data";
+import { CERTIFICATIONS } from "@/lib/resume-data";
+import { getAllBlogPosts } from "@/content/blog";
 
 export const metadata: Metadata = {
   title: "About",
   description:
-    "George Wanyoike Njoroge — security practitioner, network engineer, and ISP operator based in Nairobi, Kenya.",
+    "George Wanyoike (Sir G): security practitioner, network engineer, ISP operator and founder of Knight Labs, based in Nairobi.",
+  alternates: { canonical: "/about" },
 };
 
-const CERTIFICATIONS = [
-  { name: "CC", full: "Certified in Cybersecurity", issuer: "ISC²", year: "2024" },
-  { name: "CCNA", full: "Cisco Certified Network Associate", issuer: "Cisco", year: "2024" },
-  { name: "CyberOps", full: "CyberOps Associate", issuer: "Cisco", year: "2024" },
-  { name: "Network Defence", full: "Network Defence Specialist", issuer: "Cisco", year: "2025" },
-  { name: "Endpoint Security", full: "Endpoint Security Specialist", issuer: "Cisco", year: "2025" },
-  { name: "HCIA", full: "HCIA-Datacom", issuer: "Huawei ICT Academy", year: "2024" },
-  { name: "SC-900", full: "Security, Compliance & Identity", issuer: "Microsoft", year: "2024" },
-  { name: "Security Engineer", full: "Cyber Shujaa Security Engineer", issuer: "Cyber Shujaa & Microsoft ADC", year: "2024" },
+export const revalidate = 300;
+
+const CHAPTERS = [
+  {
+    period: "2020 – 2023",
+    title: "Hardware first",
+    body: "A B.Sc. in Computer Technology at JKUAT, finished with Second Class Upper Division. The practical education came alongside it: keeping campus networks up at JKUAT ICT Labs, then inspecting Taifa Tablets on the assembly line at JKUAT Industrial Park and running secure data sanitisation for end-of-life devices. Knowing what is inside the box turns out to matter when you are later asked to break it.",
+  },
+  {
+    period: "2024",
+    title: "A network with paying customers",
+    body: "I founded Anga Networks, an ISP on MikroTik and RouterOS across several Kenyan sites, with Starlink backhaul, wireless distribution, and an automation layer I built on n8n and the RouterOS API. Running it means every security opinion I hold has been paid for operationally. I carry the pager.",
+  },
+  {
+    period: "2024 – 2025",
+    title: "Security as the day job",
+    body: "Cyber Shujaa's Security Engineer track, the Cisco and Huawei academies, and ISC² Certified in Cybersecurity built the foundation. The Presidential DigiTalent Programme placed me at the National Commission for Science, Technology and Innovation as an information security intern: network assessments, hardware audits, firewall review planning, controlled penetration testing, and contributing to the organisation's IT policy.",
+  },
+  {
+    period: "2025 – now",
+    title: "Assurance in production",
+    body: "I run digital platforms assurance for a national airport parking services operator: mobile and web penetration testing, QA ownership for the mobile app, and audits of production infrastructure. One piece of that work traced an estimated KES 8.28M in revenue loss through data analysis alone. Alongside it I take authorised audits and bug bounty research independently, partnering with Spookie Labs Inc. on selected engagements.",
+  },
+  {
+    period: "Now",
+    title: "Knight Labs",
+    body: "Knight Labs is where the practice becomes a firm. SACCOs, clinics, schools and property managers hold data that deserves the same care as a university audit, without the budget for a security team. The firm gives them that, and I review every proposal and report.",
+  },
 ];
 
 const CAPABILITIES = [
   {
     area: "Offensive",
     detail:
-      "Full-lifecycle penetration testing across web, mobile, and API surfaces. Authorization flaws, attack chaining, CVE research against deployed versions, and legacy binary analysis where no source is available.",
+      "Full-lifecycle penetration testing across web, mobile and API surfaces. Authorization flaws, attack chaining, CVE research against deployed versions, and legacy binary analysis where no source is available.",
   },
   {
-    area: "Network & infrastructure",
+    area: "Network and infrastructure",
     detail:
       "MikroTik RouterOS and Cisco environments, link aggregation, segmentation design, firewall assessment, satellite and wireless distribution, and zero-trust overlay networks.",
   },
   {
-    area: "Assurance & audit",
+    area: "Assurance and audit",
     detail:
       "Systems auditing on production infrastructure, digital QA ownership for a mobile application, structured staff interviews as a technical control, and operational data analysis that produces financial findings.",
   },
@@ -46,223 +67,111 @@ const CAPABILITIES = [
   },
 ];
 
-const EARLIER = [
-  { role: "Information Security Intern", org: "NACOSTI — Presidential DigiTalent Program" },
-  { role: "Quality Control Technician (Intern)", org: "JKUAT Industrial Park" },
-  { role: "Internal Attaché", org: "JKUAT ICT Labs" },
-];
-
 export default function AboutPage() {
+  const ctfCount = getAllBlogPosts().filter((p) => p.category === "ctf").length;
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main id="main" className="pt-24 pb-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <PageHeader
-            title={PROFILE.name}
-            comment={`${PROFILE.location} — goes by ${PROFILE.alias}`}
-            standfirst="Security practitioner, network engineer, and ISP operator. The through line across all of it is that the offensive work and the operational work inform each other, and neither stands on its own."
-          />
+    <>
+      <PageHeader
+        eyebrow={`${PROFILE.location} · goes by ${PROFILE.alias}`}
+        title="George Wanyoike Njoroge"
+        standfirst={
+          <p>
+            Security practitioner, network engineer, ISP operator, and founder
+            of Knight Labs. The through-line is simple: the offensive work and
+            the operational work inform each other, and neither is worth much
+            on its own.
+          </p>
+        }
+      />
 
-          <section className="mb-12">
-            <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <span className="text-primary font-mono">{">"}</span>
-              Current work
-            </h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {ROLES.map((role) => (
-                <div
-                  key={role.title}
-                  className="rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm p-6"
-                >
-                  <h3 className="font-semibold text-foreground">{role.title}</h3>
-                  <p className="text-xs text-primary font-mono mt-1 mb-3">
-                    {role.org}
-                  </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {role.detail}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <span className="text-primary font-mono">{">"}</span>
-              What he does
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {CAPABILITIES.map((item) => (
-                <div
-                  key={item.area}
-                  className="rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm p-6"
-                >
-                  <h3 className="font-semibold text-foreground mb-2">
-                    {item.area}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {item.detail}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <span className="text-primary font-mono">{">"}</span>
-              Education & certification
-            </h2>
-            <div className="rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm p-6 mb-6">
-              <h3 className="font-semibold text-foreground">
-                B.Sc. Computer Technology
-              </h3>
-              <p className="text-xs text-primary font-mono mt-1">
-                Jomo Kenyatta University of Agriculture and Technology — 2024
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Second Class Upper Division
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {CERTIFICATIONS.map((cert) => (
-                <div
-                  key={cert.name}
-                  className="rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm p-4"
-                >
-                  <div className="flex items-start gap-2 mb-2">
-                    <Award className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                    <span className="font-mono text-sm font-bold text-primary leading-tight">
-                      {cert.name}
-                    </span>
-                  </div>
-                  <p className="text-xs text-foreground leading-snug">
-                    {cert.full}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-mono mt-1.5">
-                    {cert.issuer} · <span className="figure-num">{cert.year}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2">
-              <span className="text-primary font-mono">{">"}</span>
-              Programs & training academies
-            </h2>
-            <p className="text-muted-foreground font-mono text-sm mb-6">
-              {"// Where the certifications actually came from"}
-            </p>
-            <div className="grid md:grid-cols-2 gap-6">
-              {PROGRAMS.map((prog) => (
-                <div
-                  key={prog.name}
-                  className="rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm p-6"
-                >
-                  <h3 className="font-semibold text-foreground">{prog.name}</h3>
-                  <p className="text-xs text-primary font-mono mt-1 mb-3">
-                    {prog.org}
-                  </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {prog.detail}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <span className="text-primary font-mono">{">"}</span>
-              Earlier roles
-            </h2>
-            <div className="rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm p-6 max-w-3xl">
-              <ul className="space-y-3">
-                {EARLIER.map((item) => (
-                  <li
-                    key={item.role}
-                    className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1"
-                  >
-                    <span className="text-sm text-foreground">{item.role}</span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {item.org}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p className="text-sm text-muted-foreground mt-5 pt-5 border-t border-border/50">
-                The full history, with detail, is on the{" "}
-                <Link
-                  href="/resume"
-                  className="text-primary hover:underline cursor-pointer"
-                >
-                  resume page
-                </Link>
-                .
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <span className="text-primary font-mono">{">"}</span>
-              Get in touch
-            </h2>
-            <div className="rounded-lg border border-border/50 bg-card/30 backdrop-blur-sm p-6 max-w-3xl space-y-4">
-              <a
-                href={`mailto:${PROFILE.email}`}
-                className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Mail className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-mono">{PROFILE.email}</span>
-              </a>
-              <a
-                href={`mailto:${PROFILE.emailAlt}`}
-                className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Mail className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-mono">{PROFILE.emailAlt}</span>
-              </a>
-              <a
-                href={`tel:${PROFILE.phone.replace(/[^+0-9]/g, "")}`}
-                className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Phone className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-mono figure-num">
-                  {PROFILE.phone}
-                </span>
-              </a>
-              <a
-                href={PROFILE.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Linkedin className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-mono">george-wanyoike</span>
-              </a>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <MapPin className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-mono">{PROFILE.location}</span>
+      <section className="container-page">
+        <SectionHeading index="01" title="The story so far" />
+        <ol className="relative">
+          {CHAPTERS.map((ch) => (
+            <li key={ch.title} className="reveal grid gap-3 border-t border-border py-8 md:grid-cols-12 md:gap-8">
+              <p className="eyebrow mono-num md:col-span-3 md:pt-2">{ch.period}</p>
+              <div className="md:col-span-9">
+                <h3 className="font-display text-2xl text-foreground sm:text-[1.75rem]">{ch.title}</h3>
+                <p className="mt-3 max-w-3xl text-[1.0625rem] leading-relaxed text-muted-foreground">{ch.body}</p>
               </div>
-            </div>
-          </section>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="container-page pt-20 sm:pt-28">
+        <SectionHeading index="02" title="What I do" />
+        <ul className="grid gap-x-10 md:grid-cols-2">
+          {CAPABILITIES.map((item) => (
+            <li key={item.area} className="reveal border-t border-border py-6">
+              <h3 className="font-display text-xl text-foreground">{item.area}</h3>
+              <p className="mt-2 leading-relaxed text-muted-foreground">{item.detail}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="container-page pt-20 sm:pt-28">
+        <SectionHeading index="03" title="How I work" note="Rules I hold myself to on every engagement." />
+        <ol className="grid gap-x-10 md:grid-cols-2">
+          {STANDARDS.map((rule, i) => (
+            <li key={rule} className="reveal flex gap-5 border-t border-border py-6">
+              <span className="figure-num text-2xl leading-none text-primary">{i + 1}</span>
+              <p className="leading-relaxed text-foreground/90">{rule}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="container-page pt-20 sm:pt-28">
+        <SectionHeading
+          index="04"
+          title="Community and practice"
+          note="Where I keep the edge sharp, and where I learned the trade."
+        />
+        <div className="grid gap-10 md:grid-cols-12">
+          <div className="md:col-span-5">
+            <p className="leading-relaxed text-muted-foreground">
+              Active on Hack The Box, TryHackMe and picoCTF, with{" "}
+              <Link href="/blog?category=ctf" className="link-quiet text-foreground">
+                {ctfCount} CTF writeups
+              </Link>{" "}
+              published here. Bug bounty research runs through public programmes
+              such as HackerOne, described by vulnerability class and never by
+              target.
+            </p>
+            {/* TODO(owner): add talks, panels, meetups or community roles here
+                (event, date, topic, link). Nothing in the repo documents any yet,
+                so no "Speaking" section is shown. */}
+          </div>
+          <ul className="md:col-span-7">
+            {PROGRAMS.map((prog) => (
+              <li key={prog.name} className="reveal border-t border-border py-5">
+                <h3 className="font-display text-xl text-foreground">{prog.name}</h3>
+                <p className="mt-1 text-sm text-primary">{prog.org}</p>
+                <p className="mt-2 leading-relaxed text-muted-foreground">{prog.detail}</p>
+              </li>
+            ))}
+          </ul>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </section>
+
+      <section className="container-page pt-20 sm:pt-28">
+        <SectionHeading index="05" title="Credentials" />
+        <ul className="flex flex-wrap gap-2">
+          {CERTIFICATIONS.map((cert) => (
+            <li key={cert.name} className="tag !text-sm !text-foreground">
+              {cert.fullName}
+              <span className="ml-2 text-muted-foreground">{cert.issuer.split(" ")[0]}</span>
+            </li>
+          ))}
+        </ul>
+        <Link href="/resume" className="mt-8 inline-flex items-center gap-2 font-medium text-foreground hover:text-primary">
+          Full resume and education
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </section>
+    </>
   );
 }

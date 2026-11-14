@@ -1,12 +1,18 @@
 // Session management utilities
-// Implements secure session handling with HTTP-only cookies
+// Stateless, HMAC-signed session tokens in an HTTP-only cookie.
+//
+// Token format: <id>.<expiresAtUnixSeconds>.<hmacSha256(id.expiresAt)>
+// - The expiry is inside the signed payload, so a stolen cookie stops working
+//   at expiry even if the browser ignores Max-Age.
+// - Logout adds the token id to an in-memory revocation list until it expires.
+//   (Single-container deployment; a restart clears the list, and rotating
+//   SESSION_SECRET invalidates every outstanding session.)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
-import { InputValidator } from './input-validator';
 import { getSessionSecret, getSessionDuration, getAdminPassword, getAdminUserId } from './env';
 
-const SESSION_COOKIE_NAME = 'admin_session';
+export const SESSION_COOKIE_NAME = 'admin_session';
 
 interface SessionData {
   authenticated: boolean;
@@ -14,128 +20,100 @@ interface SessionData {
   expiresAt: number;
 }
 
-/**
- * Generate a secure session token
- */
-function generateSessionToken(): string {
-  return randomBytes(32).toString('hex');
+const revoked = new Map<string, number>(); // token id -> expiresAt (ms)
+
+function pruneRevoked(now = Date.now()) {
+  for (const [id, exp] of revoked) {
+    if (exp <= now) revoked.delete(id);
+  }
 }
 
-/**
- * Create a signed session token
- */
-function signSessionToken(token: string): string {
-  const secret = getSessionSecret();
-  
-  const hmac = createHmac('sha256', secret);
-  hmac.update(token);
-  const signature = hmac.digest('hex');
-  
-  return `${token}.${signature}`;
+function sign(payload: string, secret: string): string {
+  return createHmac('sha256', secret).update(payload).digest('hex');
 }
 
-/**
- * Verify and extract session token from signed token
- */
-function verifySessionToken(signedToken: string): string | null {
+function safeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length || !/^[0-9a-f]+$/.test(a)) return false;
+  return timingSafeEqual(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'));
+}
+
+/** Verify a raw cookie value. Returns the token id and expiry, or null. */
+export function verifySessionValue(value: string | undefined | null): { id: string; expiresAt: number } | null {
+  if (!value) return null;
   let secret: string;
   try {
     secret = getSessionSecret();
   } catch {
     return null;
   }
-  
-  const parts = signedToken.split('.');
-  if (parts.length !== 2) {
-    return null;
-  }
-  
-  const [token, signature] = parts;
-  
-  // Recreate signature
-  const hmac = createHmac('sha256', secret);
-  hmac.update(token);
-  const expectedSignature = hmac.digest('hex');
-  
-  // Constant-time comparison
-  if (signature.length !== expectedSignature.length) {
-    return null;
-  }
-  
-  try {
-    const signatureBuffer = Buffer.from(signature, 'hex');
-    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-    
-    if (!timingSafeEqual(signatureBuffer, expectedBuffer)) {
-      return null;
-    }
-    
-    return token;
-  } catch {
-    return null;
-  }
+
+  const parts = value.split('.');
+  if (parts.length !== 3) return null;
+  const [id, expStr, signature] = parts;
+  if (!/^[0-9a-f]{64}$/.test(id) || !/^\d{1,12}$/.test(expStr)) return null;
+
+  if (!safeEqualHex(signature, sign(`${id}.${expStr}`, secret))) return null;
+
+  const expiresAt = Number(expStr) * 1000;
+  const now = Date.now();
+  if (!Number.isFinite(expiresAt) || expiresAt <= now) return null;
+
+  pruneRevoked(now);
+  if (revoked.has(id)) return null;
+
+  return { id, expiresAt };
 }
 
-/**
- * Create a session and return token
- */
-export function createSession(_userId?: string): string {
-  const token = generateSessionToken();
-  return signSessionToken(token);
+/** Create a signed session token. */
+export function createSession(): string {
+  const id = randomBytes(32).toString('hex');
+  const exp = Math.floor(Date.now() / 1000) + getSessionDuration();
+  return `${id}.${exp}.${sign(`${id}.${exp}`, getSessionSecret())}`;
 }
 
-/**
- * Get session from request cookie
- */
+/** Get session from request cookie. */
 export function getSession(request: NextRequest): SessionData | null {
-  const cookie = request.cookies.get(SESSION_COOKIE_NAME);
-  
-  if (!cookie || !cookie.value) {
-    return null;
-  }
-  
-  const token = verifySessionToken(cookie.value);
-  if (!token) {
-    return null;
-  }
-  
-  // For simplicity, we'll use a simple token-based approach
-  // In production, you might want to store session data in a database or cache
-  // For now, we'll just verify the token is valid and not expired
-  
-  // Check if token exists (in a real app, you'd check a session store)
-  // For this implementation, we'll assume valid tokens are authenticated
+  const verified = verifySessionValue(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+  if (!verified) return null;
   return {
     authenticated: true,
-    userId: getAdminUserId() as string,
-    expiresAt: Date.now() + getSessionDuration() * 1000,
+    userId: getAdminUserId() ?? 'admin',
+    expiresAt: verified.expiresAt,
   };
 }
 
-/**
- * Set session cookie in response
- */
+/** Revoke the session carried by this request, if any. */
+export function revokeSession(request: NextRequest): void {
+  const verified = verifySessionValue(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+  if (verified) revoked.set(verified.id, verified.expiresAt);
+}
+
+/** Set session cookie in response. */
 export function setSessionCookie(response: NextResponse, token: string): void {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: isProduction, // Only send over HTTPS in production
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     maxAge: getSessionDuration(),
     path: '/',
   });
 }
 
-/**
- * Clear session cookie
- */
+/** Clear session cookie. */
 export function clearSessionCookie(response: NextResponse): void {
-  response.cookies.delete(SESSION_COOKIE_NAME);
+  response.cookies.set(SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 0,
+    path: '/',
+  });
 }
 
 /**
- * Verify password against environment variable
+ * Verify password against the environment variable.
+ * Both sides are HMAC'd first so the comparison is constant-time and does not
+ * leak the password length.
  */
 export function verifyPassword(password: string): boolean {
   let adminPassword: string;
@@ -144,9 +122,58 @@ export function verifyPassword(password: string): boolean {
   } catch {
     return false;
   }
-  
-  // Use constant-time comparison to prevent timing attacks
-  return InputValidator.constantTimeCompare(password, adminPassword);
+  const key = randomBytes(32);
+  const a = createHmac('sha256', key).update(password, 'utf8').digest();
+  const b = createHmac('sha256', key).update(adminPassword, 'utf8').digest();
+  return timingSafeEqual(a, b);
+}
+
+// ---------------------------------------------------------------------------
+// Login throttling (in-memory, per client IP)
+// ---------------------------------------------------------------------------
+
+const MAX_FAILURES = 5;
+const WINDOW_MS = 15 * 60 * 1000;
+const failures = new Map<string, { count: number; first: number }>();
+
+export function clientIp(request: NextRequest): string {
+  return (
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
+/** Seconds until the client may try again, or 0 if not locked out. */
+export function loginRetryAfter(ip: string): number {
+  const entry = failures.get(ip);
+  if (!entry) return 0;
+  const elapsed = Date.now() - entry.first;
+  if (elapsed > WINDOW_MS) {
+    failures.delete(ip);
+    return 0;
+  }
+  return entry.count >= MAX_FAILURES ? Math.ceil((WINDOW_MS - elapsed) / 1000) : 0;
+}
+
+export function recordLoginFailure(ip: string): void {
+  const now = Date.now();
+  const entry = failures.get(ip);
+  if (!entry || now - entry.first > WINDOW_MS) {
+    failures.set(ip, { count: 1, first: now });
+  } else {
+    entry.count += 1;
+  }
+  if (failures.size > 10_000) {
+    for (const [key, value] of failures) {
+      if (now - value.first > WINDOW_MS) failures.delete(key);
+    }
+  }
+}
+
+export function clearLoginFailures(ip: string): void {
+  failures.delete(ip);
 }
 
 /**
@@ -154,4 +181,3 @@ export function verifyPassword(password: string): boolean {
  * Re-exports from env.ts for backward compatibility
  */
 export { validateEnvironment } from './env';
-

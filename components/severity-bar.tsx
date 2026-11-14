@@ -53,7 +53,7 @@ export function SeverityBar({
           {ORDER.map((key) =>
             findings[key] > 0 ? (
               <span key={key} className="text-muted-foreground">
-                <span className={`figure-num font-bold ${TEXT[key]}`}>
+                <span className={`mono-num font-medium ${TEXT[key]}`}>
                   {findings[key]}
                 </span>{" "}
                 {key}
