@@ -23,7 +23,7 @@ jobs:
       ADMIN_USER_ID: "ci-user"
       SESSION_DURATION: "86400"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -48,7 +48,7 @@ jobs:
     timeout-minutes: 25
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: docker/setup-buildx-action@v3
 
