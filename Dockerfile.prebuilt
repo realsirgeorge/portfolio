@@ -1,0 +1,29 @@
+# Prebuilt runtime image.
+#
+# Use this when the server cannot afford a full `npm ci` + `next build`
+# (low-memory or I/O-starved hosts). `scripts/build-runtime.sh` runs the build
+# locally, assembles `.deploy-runtime/` from the standalone output, and this
+# file simply packages that directory.
+#
+# Normal deploys still use the multi-stage Dockerfile.
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3025 \
+    HOSTNAME=0.0.0.0
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# .deploy-runtime already contains:
+#   server.js, .next/ (server chunks + static), node_modules/, public/, content/
+COPY . .
+
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+EXPOSE 3025
+CMD ["node", "server.js"]

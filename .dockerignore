@@ -50,6 +50,9 @@ docker-compose.yml
 .github
 .gitlab-ci.yml
 
+# Local deploy artifacts
+.deploy-runtime
+
 # Logs
 logs
 *.log
