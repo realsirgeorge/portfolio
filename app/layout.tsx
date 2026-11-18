@@ -59,7 +59,10 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: PROFILE.name, url: SITE_URL }],
   creator: PROFILE.name,
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    types: { "application/rss+xml": `${SITE_URL}/feed.xml` },
+  },
   openGraph: {
     type: "website",
     locale: "en_KE",
@@ -92,37 +95,56 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const personJsonLd = {
+const siteJsonLd = {
   "@context": "https://schema.org",
-  "@type": "Person",
-  "@id": `${SITE_URL}/#person`,
-  name: PROFILE.name,
-  alternateName: ["George Wanyoike", PROFILE.alias],
-  url: SITE_URL,
-  jobTitle: "Founder, Knight Labs",
-  description: DESCRIPTION,
-  worksFor: {
-    "@type": "Organization",
-    name: KNIGHT_LABS.name,
-    url: KNIGHT_LABS.url,
-  },
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Nairobi",
-    addressCountry: "KE",
-  },
-  alumniOf: {
-    "@type": "CollegeOrUniversity",
-    name: "Jomo Kenyatta University of Agriculture and Technology",
-  },
-  knowsAbout: [
-    "Penetration testing",
-    "Security auditing",
-    "Network engineering",
-    "MikroTik RouterOS",
-    "Application security",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#person`,
+      name: PROFILE.name,
+      alternateName: ["George Wanyoike", PROFILE.alias],
+      url: SITE_URL,
+      jobTitle: "Founder, Knight Labs",
+      description: DESCRIPTION,
+      worksFor: { "@id": `${SITE_URL}/#organization` },
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Nairobi",
+        addressCountry: "KE",
+      },
+      alumniOf: {
+        "@type": "CollegeOrUniversity",
+        name: "Jomo Kenyatta University of Agriculture and Technology",
+      },
+      knowsAbout: [
+        "Penetration testing",
+        "Security auditing",
+        "Network engineering",
+        "MikroTik RouterOS",
+        "Application security",
+      ],
+      sameAs: [PROFILE.linkedin, PROFILE.github.replace(/\/$/, "")],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: "George Wanyoike",
+      description: DESCRIPTION,
+      inLanguage: "en-KE",
+      publisher: { "@id": `${SITE_URL}/#person` },
+    },
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: KNIGHT_LABS.name,
+      url: KNIGHT_LABS.url,
+      email: KNIGHT_LABS.email,
+      founder: { "@id": `${SITE_URL}/#person` },
+      areaServed: "KE",
+      address: { "@type": "PostalAddress", addressLocality: "Nairobi", addressCountry: "KE" },
+    },
   ],
-  sameAs: [PROFILE.linkedin, PROFILE.github.replace(/\/$/, "")],
 };
 
 export default function RootLayout({
@@ -159,7 +181,7 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           // Static, build-time data only; no user input reaches this.
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
         />
       </body>
     </html>

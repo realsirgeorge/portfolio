@@ -59,6 +59,7 @@ const nextConfig = {
       { source: '/skills', destination: '/about', permanent: true },
       { source: '/writing', destination: '/blog', permanent: false },
       { source: '/knightlabs', destination: '/knight-labs', permanent: true },
+      { source: '/infrastructure', destination: '/open-for-work', permanent: true },
     ];
   },
 
@@ -75,6 +76,12 @@ const nextConfig = {
       {
         source: '/api/:path*',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' },
+        ],
       },
     ];
   },

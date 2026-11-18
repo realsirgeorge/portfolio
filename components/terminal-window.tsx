@@ -97,7 +97,7 @@ export function TerminalWindow({
             "Advise, Respond. Business enquiries go there. `open knight-labs`.",
           ];
         case "ls":
-          return ["work/   knight-labs/   lab/   library/   blog/   about/   resume/   contact/"];
+          return ["work/   knight-labs/   hire/   library/   blog/   about/   resume/   contact/"];
         case "pwd":
           return ["/home/george/portfolio"];
         case "stack":
@@ -118,9 +118,9 @@ export function TerminalWindow({
               "34 findings across a learning-institution audit, a production ISP,",
               "edge-AI security research, and commercial delivery. `open work`.",
             ],
-            lab: [
-              "Offensive work and public publishing, separated by a one-way git",
-              "airlock I designed. `open lab`.",
+            hire: [
+              "Open for work: Knight Labs, the security practice, and Anga",
+              "Networks, the ISP. `open hire`.",
             ],
             library: [
               "csosec, scripter, agent-forge — my methodology, encoded. `open library`.",
@@ -142,8 +142,9 @@ export function TerminalWindow({
             work: "/work",
             "knight-labs": "/knight-labs",
             knightlabs: "/knight-labs",
-            lab: "/infrastructure",
-            infrastructure: "/infrastructure",
+            hire: "/open-for-work",
+            "open-for-work": "/open-for-work",
+            infrastructure: "/open-for-work",
             library: "/library",
             blog: "/blog",
             about: "/about",
