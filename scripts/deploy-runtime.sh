@@ -46,6 +46,10 @@ mkdir .runtime-build
 tar xzf runtime-next.tar.gz -C .runtime-build
 rm -f runtime-next.tar.gz
 
+# Keep content on the durable source tree so admin uploads survive deploys.
+rm -rf .runtime-build/content
+ln -s ../content .runtime-build/content
+
 nohup setsid ./start-runtime.sh > "$HOME/portfolio.log" 2>&1 < /dev/null &
 REMOTE_SCRIPT
 

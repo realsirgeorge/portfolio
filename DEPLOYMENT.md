@@ -39,8 +39,9 @@ What it does:
    `node_modules`, `public`, `content`.
 3. Uploads a ~35 MB tarball over Tailscale.
 4. Stops only the process listening on `9090`, moves the old runtime to
-   `.runtime-build.old`, extracts the new one, starts it, and polls the public
-   health endpoint.
+   `.runtime-build.old`, extracts the new one, symlinks
+   `.runtime-build/content` to the durable source `content/` tree (so admin
+   uploads survive deploys), starts it, and polls the public health endpoint.
 
 Failures leave `.runtime-build.old` in place for a one-command rollback.
 
