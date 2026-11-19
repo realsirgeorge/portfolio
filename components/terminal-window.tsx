@@ -115,8 +115,8 @@ export function TerminalWindow({
         case "cat": {
           const sections: Record<string, string[]> = {
             work: [
-              "34 findings across a learning-institution audit, a production ISP,",
-              "edge-AI security research, and commercial delivery. `open work`.",
+              "Full-scope audits, production operations, research and commercial",
+              "builds. Client findings and figures stay private. `open work`.",
             ],
             lab: [
               "Offensive work and public publishing, separated by a one-way git",

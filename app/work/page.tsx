@@ -35,9 +35,9 @@ export default function WorkPage() {
         standfirst={
           <p>
             Client identities are anonymised by contract and stay that way.
+            Specific findings and financial figures remain with the client.
             Where a case study would be thin without a name, it gets more
-            technical depth instead of attribution. Every figure here came out
-            of the engagement it sits under.
+            technical depth instead of attribution.
           </p>
         }
       />

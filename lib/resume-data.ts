@@ -39,10 +39,10 @@ export const EXPERIENCE: {
       "Perform web application penetration testing against administrative and customer-facing platforms, focusing on access control, authentication flows and business logic abuse",
       "Own digital quality assurance for the KAPS App across release cycles, including regression testing and pre-release verification",
       "Conduct systems auditing across production infrastructure and produce findings with prioritized remediation guidance",
-      "Identified and drove remediation of a client-side credential handling weakness on a production administrative platform, tracing root cause to a missing response projection layer between the API and client state",
-      "Performed revenue assurance analysis across transaction records, quantifying material losses from category misclassification and isolating the primary source for management action",
+      "Conduct application security reviews and drive remediation of identified weaknesses across web, mobile and serverless platforms",
+      "Perform revenue assurance analysis across operational records and present findings to management",
       "Architected an availability monitoring platform on Cloudflare Workers and Firebase Realtime Database, using multi-state confirmation to suppress false-positive alerting across core endpoints and over thirty remote worksites",
-      "Assessed an internally developed serverless platform, identified access-control rule misconfigurations, and supplied corrected rule definitions to the development team",
+      "Assess internally developed serverless platforms and provide remediation guidance on identity, data-plane authorization and deployment controls",
       "Expanded scope into secure development and IoT, including security-weighted platform evaluation for edge AI hardware deployments",
     ],
     technologies: [

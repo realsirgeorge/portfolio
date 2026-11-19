@@ -1,15 +1,11 @@
 /**
  * Single source of truth for portfolio content.
  *
- * DISCLOSURE RULE: client identities are anonymized by contract. Never
- * reintroduce client names, hostnames, or engagement reference numbers for
- * NDA work, even if they appear elsewhere in this repository. Where a case
- * study feels thin, add technical depth — not attribution.
- *
- * Exceptions:
- * - Blazin Ice is named with permission and carries its contract reference.
- * - The KAPS role is named at the owner's instruction. The revenue case study
- *   stays anonymised as "target-company".
+ * DISCLOSURE RULE: client identities are anonymized by contract. Specific
+ * client findings, exploit details, hostnames, engagement reference numbers
+ * and financial figures are not published. Case studies describe scope,
+ * method and vulnerability class only. The KAPS role is named at the owner's
+ * instruction; its findings and amounts remain private.
  */
 
 export type Severity = "critical" | "high" | "medium" | "low";
@@ -131,9 +127,9 @@ export const PROGRAMS = [
 /** The three backed claims on the landing page. Each one links to its evidence. */
 export const PROOF_POINTS = [
   {
-    value: "34",
-    unit: "findings",
-    qualifier: "11 of them critical",
+    value: "7",
+    unit: "in-scope targets",
+    qualifier: "full-scope audit under NDA",
     claim: "A full-scope security audit of a learning institution, run under NDA.",
     href: "/work/university-security-audit",
   },
@@ -161,19 +157,16 @@ export const ENGAGEMENTS: Engagement[] = [
     kind: "audit",
     client: "A learning institution in Kenya",
     summary:
-      "Seven in-scope subdomains, a perimeter firewall deep-dive, legacy binary analysis, and staff interviews.",
+      "Seven in-scope targets, a perimeter firewall deep-dive, legacy binary analysis, and staff interviews. Findings stay with the client.",
     standfirst:
-      "The critical findings clustered around missing authorization rather than exotic vulnerabilities. That is the typical shape of a real audit, and it is worth saying out loud: the university was not undone by a novel exploit chain, it was undone by endpoints that never asked who was calling.",
+      "A full-scope audit is mostly a test of whether the ordinary controls were ever implemented. This case study describes the scope, the method and the classes of weakness examined; specific findings and exploit detail stay with the client.",
     authorization:
       "Signed SLA and NDA. Authorized by system owners and school administration. Non-destructive rules of engagement throughout.",
     figures: [
-      { value: "34", label: "findings, web and infrastructure" },
-      { value: "11", label: "critical", tone: "critical" },
-      { value: "16", label: "high", tone: "high" },
+      { value: "7", label: "in-scope targets" },
       { value: "14", label: "subdomains enumerated in recon" },
       { value: "66", label: "items in the preliminary inventory" },
     ],
-    findings: { critical: 11, high: 16, medium: 5, low: 2 },
     sections: [
       {
         heading: "Scope came out of recon, not the other way round",
@@ -182,48 +175,48 @@ export const ENGAGEMENTS: Engagement[] = [
       },
       {
         heading: "Web application layer",
-        items: [
-          "An IDOR on admission letter downloads. The document identifier in the request path was predictable and never validated against the requesting session, exposing enumerable student PII at scale.",
-          "A login endpoint that accepted default credentials.",
-          "A medical records search interface reachable without authentication.",
-          "Payment receipts accessible without authentication.",
-          "Web conferencing boardrooms publicly linked and joinable.",
-          "A service exposed over plain HTTP on a non-standard port.",
-        ],
         body:
-          "A five-step attack chain was confirmed against the digital services subdomain, chaining individually moderate issues into a materially worse outcome. CVE research was carried out against the specific Moodle and Laravel versions in use, rather than assuming a version implies a vulnerability.",
+          "The web review covered authorization, authentication, session handling, transport security and version-specific CVE research. The objective was to establish whether access decisions were enforced server-side, not to collect scanner output.",
+        items: [
+          "Object-level authorization on document, record and payment endpoints, including identifier predictability and session binding.",
+          "Authentication policy, including default, shared and legacy credentials.",
+          "Unauthenticated access paths to sensitive records and internal surfaces.",
+          "Session handling and transport security across public and authenticated surfaces.",
+          "Version-specific CVE research against the frameworks actually deployed.",
+          "Attack chaining across individually moderate issues to establish real business impact.",
+        ],
       },
       {
         heading: "Perimeter firewall deep-dive",
         body:
-          "A separate 21-finding assessment of the perimeter firewall appliance produced the most serious infrastructure issues. The segmentation finding is the instructive one: a governance failure expressed as a network topology, and more consequential than any single CVE on the list.",
+          "The firewall review treated segmentation as a governance property, not just a rule-set check. The most consequential issues in this class are usually architectural: flat networks and shared trust between segments that should never reach each other.",
         items: [
-          "CVE-2024-21762 (CVSS 9.6) present on the SSL-VPN component, running on vulnerable firmware.",
-          "Both administrative accounts lacking two-factor authentication.",
-          "Roughly 420 unauthenticated DHCP clients on the network.",
-          "A flat, unsegmented network spanning medical, financial, and surveillance segments. One compromised host meant lateral reach into all three.",
+          "Firmware and remote-access exposure on the perimeter appliance, assessed against the deployed version.",
+          "Administrative authentication and two-factor coverage.",
+          "DHCP and network-visibility hygiene.",
+          "Segmentation between medical, financial, surveillance and general-user estates.",
         ],
       },
       {
         heading: "Legacy application analysis",
         body:
-          "Static and dynamic analysis of a legacy ERP binary, started under Wine on Linux and finished on a purpose-built Windows VM where the compatibility layer fell short of completing SQL injection testing and access control verification. No source, no reachable vendor, and a binary that production depends on.",
+          "Static and dynamic analysis of a legacy closed-source application, started under Wine on Linux and finished on a purpose-built Windows VM where the compatibility layer fell short. No source, no reachable vendor, and a binary that production depends on. The review covered injection, authorization and access-control behaviour.",
       },
       {
         heading: "The human layer",
         body:
-          "Structured interviews with network administration staff surfaced what no scanner would have found. The interview is a technical control, not a soft formality.",
+          "Structured interviews with network administration staff surfaced governance and operational gaps that no scanner would have found. The interview is a technical control, not a soft formality.",
         items: [
-          "Physical network access available through unmanaged trunk ports.",
-          "A consumer-grade router with shared credentials serving a department.",
-          "No VPN in general use.",
-          "Firewall configuration backups stored ad-hoc on consumer cloud storage.",
+          "Physical access controls and unmanaged network ports.",
+          "Consumer-grade equipment and shared credentials in departmental use.",
+          "Remote-access coverage and consistency.",
+          "Backup handling and configuration storage.",
         ],
       },
       {
         heading: "Disclosure handling",
         body:
-          "Critical PII exposures were reported to the institution immediately on discovery, ahead of the final report. Breaking the reporting rhythm when a finding warrants it is part of the job, not an exception to it.",
+          "Critical exposures were reported to the institution immediately on discovery, ahead of the final report. Breaking the reporting rhythm when a finding warrants it is part of the job, not an exception to it. The specifics of what was reported remain private.",
       },
     ],
     stack: [
@@ -236,18 +229,18 @@ export const ENGAGEMENTS: Engagement[] = [
       "KVM/libvirt",
     ],
     whyItMatters:
-      "My strongest single artifact. Full lifecycle, under NDA, with disclosure decisions I made in real time.",
+      "My strongest single artifact. Full lifecycle, under NDA, with disclosure decisions I made in real time. The method is public; the findings are not.",
     featured: true,
   },
   {
     slug: "client-side-credential-exposure",
     title: "Client-side credential exposure across identity platforms",
     kind: "audit",
-    client: "A national transport services operator",
+    client: "A client application review",
     summary:
-      "A persistence middleware was writing live credentials to browser storage. The same class recurs on every identity platform.",
+      "How credentials leak into browser and mobile storage, and how the same trust-boundary failure appears across identity platforms.",
     standfirst:
-      "A production administrative platform was persisting a live Firebase JWT, mobile money API credentials, and plaintext passwords into browser localStorage. No developer ever wrote a line of code to put secrets there. The storage call was the symptom; the missing trust boundary was the bug, and that boundary is missing in the same way on Firebase, Cognito, Entra, Auth0 and Supabase clients.",
+      "Client-side credential exposure is rarely a single bad line of code. It is a missing projection boundary between the API and the client store, reproduced across Firebase, Cognito, Entra, Auth0 and Supabase clients. This case study describes the class and the review method; the specific client finding stays private.",
     figures: [
       { value: "CWE-522", label: "insufficiently protected credentials" },
       { value: "API3:2023", label: "OWASP broken object property level authz" },
@@ -255,19 +248,19 @@ export const ENGAGEMENTS: Engagement[] = [
     ],
     sections: [
       {
-        heading: "What was exposed",
+        heading: "The pattern",
         body:
-          "The store held a live Firebase ID token and its refresh path, credentials for a mobile money integration, and plaintext passwords copied into a profile object. The persistence middleware serialised the whole store to localStorage on every write. Anyone with the device, a browser profile backup, or an XSS foothold could read it. Nothing had to be exfiltrated through the network.",
-        items: [
-          "A live Firebase JWT with access to production data paths.",
-          "Mobile money API credentials that should only ever exist server-side.",
-          "Plaintext passwords retained in a client object long after the login call.",
-        ],
+          "The recurring pattern is an API returning a full record, a client store hydrating it, and persistence middleware serialising the whole store. The sensitive fields were never intentionally placed in storage; they arrived because no layer asked which fields the client actually needed.",
       },
       {
-        heading: "Root cause",
-        body:
-          "There was no DTO or field-projection layer between the backend response and the client store. The API returned full record objects, the frontend hydrated its store with them, and the persistence middleware faithfully serialized the store to disk. Three individually reasonable decisions producing one serious exposure. The API returned full records, the UI put them in a store, and the store persisted everything. No layer asked which fields the client actually needed.",
+        heading: "Where it surfaces",
+        items: [
+          "localStorage and sessionStorage, readable by any script in the origin.",
+          "IndexedDB and Cache Storage, which hold larger objects and survive longer than a tab.",
+          "Mobile stores: SharedPreferences, UserDefaults and WebView localStorage.",
+          "Debug logs, crash reports and device backups that copy the same values off-browser.",
+          "Server-rendered hydration payloads that embed the full record for the client to pick up.",
+        ],
       },
       {
         heading: "Why this is a class of bug, not a one-off",
@@ -360,35 +353,27 @@ export const ENGAGEMENTS: Engagement[] = [
       "Browser storage APIs",
     ],
     whyItMatters:
-      "A reusable pattern finding. The interesting part is the missing boundary, not the storage call — and the same boundary is missing on every identity platform until someone tests it.",
+      "A reusable review pattern. The interesting part is the missing boundary, not the storage call — and the same boundary is missing on every identity platform until someone tests it.",
     featured: true,
   },
   {
     slug: "firestore-rules-assessment",
     title: "Serverless security beyond Firestore rules",
     kind: "audit",
-    client: "An internal platform",
+    client: "A client platform review",
     summary:
-      "Open collections, an unauthenticated admin dashboard, and rules that looked correct — reviewed against the failure modes that recur across Firebase, AWS, Azure, Supabase and Cloudflare.",
+      "A cross-provider review model for serverless authorization: identity, data-plane rules, function roles, storage and deployment drift.",
     standfirst:
-      "A penetration test of a Firebase-hosted internal platform surfaced open Firestore collections and an administrative dashboard reachable without authentication. The detail worth the whole writeup was subtler: 'allow list' had been used where 'allow read' was meant. The rule-level bug was the entry point; the durable lesson is that serverless security is a property of identity, data-plane authorization, function roles and deployment discipline — and those fail the same way on every provider.",
+      "Serverless security is configuration security. The client talks to a managed data plane, the identity provider mints the token, and a rules file or IAM policy is the only thing between one tenant and another. This case study describes the review model I apply across Firebase, AWS, Azure, Supabase and Cloudflare; specific findings stay with the client.",
     figures: [
-      { value: "3", label: "classes of exposure confirmed" },
       { value: "5", label: "platform models in the cross-provider checklist" },
+      { value: "6", label: "review workstreams" },
     ],
     sections: [
       {
-        heading: "The rule that reads correctly and isn't",
+        heading: "Why serverless authorization is easy to get wrong",
         body:
-          "The distinction between list and read permissions in Firestore rules is subtle enough that a ruleset can pass a casual review, behave correctly on the common path, and still permit direct document access the author believed was blocked. A query can be denied while a direct document get is allowed, or the reverse, depending on how the rule is written. The browser SDK talks to the data plane directly, so there is no server-side controller to catch what the rule misses. Rules are code, and they need the same adversarial reading and tests as the application they protect.",
-      },
-      {
-        heading: "Also found",
-        items: [
-          "Firestore collections readable without authentication.",
-          "An administrative dashboard reachable without authentication.",
-          "Incomplete security rules across several collection paths.",
-        ],
+          "The distinction between list and read permissions is subtle enough that a ruleset can pass a casual review, behave correctly on the common path, and still permit direct document access the author believed was blocked. A query can be denied while a direct document get is allowed, or the reverse, depending on how the rule is written. The browser SDK talks to the data plane directly, so there is no server-side controller to catch what the rule misses. Rules are code, and they need the same adversarial reading and tests as the application they protect.",
       },
       {
         heading: "Serverless moves the perimeter into configuration",
@@ -464,9 +449,9 @@ export const ENGAGEMENTS: Engagement[] = [
         ],
       },
       {
-        heading: "What changed",
+        heading: "What a review produces",
         body:
-          "Corrected rule definitions were supplied to the development team: list and read were separated where the intent was per-document access, the administrative dashboard was put behind authentication, and the incomplete collection paths were closed. The direct-access paths were re-tested against the revised rules. The cross-provider checklist above is what I now run on every serverless review, regardless of vendor.",
+          "A prioritised remediation plan, corrected rule or policy definitions where needed, and a regression suite that exercises direct data-plane access. The client keeps the detail; the method is what generalises.",
       },
     ],
     stack: [
@@ -483,33 +468,47 @@ export const ENGAGEMENTS: Engagement[] = [
   },
   {
     slug: "revenue-loss-analysis",
-    title: "Revenue loss analysis through operational data",
+    title: "Revenue assurance through operational data",
     kind: "research",
     client: "target-company",
     summary:
-      "Item category misclassification traced to a money figure a board could act on.",
+      "A method for turning operational records into a revenue-assurance review management can act on.",
     standfirst:
-      "Not every security finding arrives through an exploit. Analysis across item records identified a substantial revenue loss driven by category misclassification, reached entirely through data analysis.",
+      "Not every assurance finding arrives through an exploit. Revenue-assurance work asks whether the operational data agrees with the money, and whether the classification and approval rules behind it are being followed. This case study describes the method; the client's figures and findings stay private.",
     figures: [
-      { value: "KES 8.28M", label: "estimated revenue loss identified" },
-      { value: "297+", label: "item records analysed" },
-      { value: "73%", label: "of the loss from a single submitter group" },
+      { value: "3", label: "data layers reconciled" },
+      { value: "1", label: "management-ready report" },
     ],
     sections: [
       {
-        heading: "What the analysis found",
+        heading: "The question",
         body:
-          "Item category misclassification was the primary driver, and the loss was heavily concentrated: roughly 73 percent of the identified total traced back to one submitter group. Concentration like that changes the remediation from a systems problem into a controls-and-oversight problem.",
+          "Revenue assurance starts with a simple question: does the recorded transaction agree with the category, approval and price that should have applied? The analysis reconciles operational records against the rules the business believes it is running, then isolates where the two diverge.",
+      },
+      {
+        heading: "Where the method looks",
+        items: [
+          "Classification and category rules, including who can change them and how changes are approved.",
+          "Submitter and channel concentration, to distinguish a systemic rule problem from a local one.",
+          "Approval overrides and exceptions that bypass the normal workflow.",
+          "Reconciliation gaps between operational records, billing and reported revenue.",
+          "Reporting definitions that can hide a loss by aggregating it into a benign-looking line.",
+        ],
       },
       {
         heading: "Why it belongs in a security portfolio",
         body:
-          "Assurance work that produces a financial finding is often more persuasive inside an organization than a CVSS 9.8, because it arrives in the unit the board already uses. Practitioners undersell this capability, and it is a real one.",
+          "Assurance work that produces a financial finding is often more persuasive inside an organization than a CVSS 9.8, because it arrives in the unit the board already uses. Practitioners undersell this capability, and it is a real one. The discipline is the same: establish what should be true, test whether it is, and trace the gap to a control.",
+      },
+      {
+        heading: "Reporting",
+        body:
+          "The output is a management-ready pack: the observed pattern, the control that should have caught it, and the remediation owner. Specific figures remain with the client.",
       },
     ],
     stack: ["Data analysis", "Operational auditing", "Controls review"],
     whyItMatters:
-      "Breaks the stereotype that security work is only technical. I reached this one without exploitation.",
+      "Breaks the stereotype that security work is only technical. The method is data analysis, not exploitation.",
     featured: true,
   },
   {
@@ -564,33 +563,33 @@ export const ENGAGEMENTS: Engagement[] = [
     kind: "research",
     client: "Public programs and self-directed work",
     summary:
-      "Authorization flaws, passive-only findings, static source review, and CTF work.",
+      "Authorization review, passive reconnaissance, static source review and CTF practice.",
     standfirst:
-      "Ongoing independent research across public bug bounty programs and self-directed review. Findings below are described by class, not by target.",
+      "Ongoing independent research across public bug bounty programs and self-directed review. Findings are described by class, not by target, and specific candidates remain with the program.",
     figures: [
-      { value: "10", label: "findings in one static source review" },
       { value: "3", label: "active platforms in rotation" },
+      { value: "3", label: "research workstreams" },
     ],
     sections: [
       {
         heading: "Major online travel platform, via HackerOne",
         body:
-          "Identified a BOLA/IDOR candidate on a cart identifier parameter and a passwordless authentication flow flagged as an account takeover candidate. Produced a structured recon summary and a continuity brief so the engagement could be resumed cleanly later. Writing handoff documentation for your future self is an underrated part of the methodology.",
+          "Authorization and authentication review on a public program. The work produced a structured recon summary and a continuity brief so the engagement could be resumed cleanly later. Writing handoff documentation for your future self is an underrated part of the methodology.",
       },
       {
         heading: "Regional mobility startup, passive reconnaissance only",
         body:
-          "Cloudflare infrastructure mapping, certificate transparency log analysis, and identification of an email spoofing exposure caused by a missing MX record. A real finding produced without sending a single packet to the target.",
+          "Passive reconnaissance across public infrastructure, certificate transparency and DNS posture. The value is in producing observations without sending a single packet to the target.",
       },
       {
         heading: "Authentication template, static source review",
         body:
-          "Ten findings, including a trust proxy misconfiguration, use of a non-cryptographic RNG for backup code generation, and token storage in localStorage. The RNG finding is the one that generalizes: random enough is not a security property.",
+          "Static source review of an authentication template, focused on randomness, proxy trust and client-side token handling. The general lesson: random enough is not a security property.",
       },
       {
         heading: "Capture the flag",
         body:
-          "A session hijacking challenge solved through a debug endpoint that leaked administrator session identifiers, confirmed by manual cookie manipulation. Debug endpoints surviving into production are a vulnerability class, not an accident. Active on Hack The Box, TryHackMe, and picoCTF.",
+          "A session-hijacking challenge solved through methodical analysis of a debug surface and confirmed by manual testing. Debug endpoints surviving into production are a vulnerability class, not an accident. Active on Hack The Box, TryHackMe and picoCTF.",
       },
     ],
     stack: ["HackerOne", "Burp Suite", "crt.sh", "Semgrep", "DNS tooling"],
@@ -750,7 +749,7 @@ export const ENGAGEMENTS: Engagement[] = [
     summary:
       "A full-stack commercial web build, delivered on a milestone schedule, built with a pentester's defaults.",
     standfirst:
-      "A full-stack build for a synthetic ice facility under contract BLZ-WEB-2026-001. It is on this site because a findings list alone leaves an obvious question unanswered: can I build the thing I keep breaking.",
+      "A full-stack build for a synthetic ice facility under a formal contract. It is on this site because a findings list alone leaves an obvious question unanswered: can I build the thing I keep breaking.",
     figures: [
       { value: "11", label: "pages in the delivered site structure" },
       { value: "40/30/30", label: "milestone payment schedule" },

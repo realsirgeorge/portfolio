@@ -35,7 +35,7 @@ const CHAPTERS = [
   {
     period: "2026 – now",
     title: "Assurance in production",
-    body: "I run digital platforms assurance for Kenya Airport Parking Services (KAPS): mobile and web penetration testing, QA ownership for the KAPS App, and audits of production infrastructure. One piece of that work traced an estimated KES 8.28M in revenue loss through data analysis alone. Alongside it I take authorised audits and bug bounty research independently, partnering with Spookie Labs Inc. on selected engagements.",
+    body: "I run digital platforms assurance for Kenya Airport Parking Services (KAPS): mobile and web penetration testing, QA ownership for the KAPS App, and audits of production infrastructure. Specific findings and figures remain with the client. Alongside it I take authorised audits and bug bounty research independently, partnering with Spookie Labs Inc. on selected engagements.",
   },
   {
     period: "Now",
