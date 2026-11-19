@@ -33,9 +33,9 @@ const CHAPTERS = [
     body: "Cyber Shujaa's Security Engineer track, the Cisco and Huawei academies, and ISC² Certified in Cybersecurity built the foundation. The Presidential DigiTalent Programme placed me at the National Commission for Science, Technology and Innovation as an information security intern: network assessments, hardware audits, firewall review planning, controlled penetration testing, and contributing to the organisation's IT policy.",
   },
   {
-    period: "2025 – now",
+    period: "2026 – now",
     title: "Assurance in production",
-    body: "I run digital platforms assurance for a national airport parking services operator: mobile and web penetration testing, QA ownership for the mobile app, and audits of production infrastructure. One piece of that work traced an estimated KES 8.28M in revenue loss through data analysis alone. Alongside it I take authorised audits and bug bounty research independently, partnering with Spookie Labs Inc. on selected engagements.",
+    body: "I run digital platforms assurance for Kenya Airport Parking Services (KAPS): mobile and web penetration testing, QA ownership for the KAPS App, and audits of production infrastructure. One piece of that work traced an estimated KES 8.28M in revenue loss through data analysis alone. Alongside it I take authorised audits and bug bounty research independently, partnering with Spookie Labs Inc. on selected engagements.",
   },
   {
     period: "Now",

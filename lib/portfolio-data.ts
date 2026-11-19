@@ -6,8 +6,10 @@
  * NDA work, even if they appear elsewhere in this repository. Where a case
  * study feels thin, add technical depth — not attribution.
  *
- * The one exception is the Blazin Ice build, which is named with permission
- * and carries its contract reference openly.
+ * Exceptions:
+ * - Blazin Ice is named with permission and carries its contract reference.
+ * - The KAPS role is named at the owner's instruction. The revenue case study
+ *   stays anonymised as "target-company".
  */
 
 export type Severity = "critical" | "high" | "medium" | "low";
@@ -79,9 +81,9 @@ export const ROLES = [
   },
   {
     title: "Digital Platforms Assurance",
-    org: "National airport parking services operator",
+    org: "Kenya Airport Parking Services",
     detail:
-      "Owns digital QA for the mobile application, runs mobile and web penetration testing across the organization's platforms, and audits production infrastructure. Scope has recently widened into development and IoT work.",
+      "Owns digital QA for the KAPS App, runs mobile and web penetration testing across the organization's platforms, and audits production infrastructure. Scope has recently widened into secure development and IoT work.",
   },
   {
     title: "Founder and Operator",
@@ -239,51 +241,146 @@ export const ENGAGEMENTS: Engagement[] = [
   },
   {
     slug: "client-side-credential-exposure",
-    title: "Client-side credential exposure in a production admin platform",
+    title: "Client-side credential exposure across identity platforms",
     kind: "audit",
     client: "A national transport services operator",
     summary:
-      "A state management library's persistence middleware was writing live credentials to browser storage.",
+      "A persistence middleware was writing live credentials to browser storage. The same class recurs on every identity platform.",
     standfirst:
-      "A production administrative platform was persisting a live Firebase JWT, mobile money API credentials, and plaintext passwords into browser localStorage. No developer ever wrote a line of code to put secrets there.",
+      "A production administrative platform was persisting a live Firebase JWT, mobile money API credentials, and plaintext passwords into browser localStorage. No developer ever wrote a line of code to put secrets there. The storage call was the symptom; the missing trust boundary was the bug, and that boundary is missing in the same way on Firebase, Cognito, Entra, Auth0 and Supabase clients.",
     figures: [
       { value: "CWE-522", label: "insufficiently protected credentials" },
       { value: "API3:2023", label: "OWASP broken object property level authz" },
+      { value: "6", label: "identity platforms covered by the comparison" },
     ],
     sections: [
       {
+        heading: "What was exposed",
+        body:
+          "The store held a live Firebase ID token and its refresh path, credentials for a mobile money integration, and plaintext passwords copied into a profile object. The persistence middleware serialised the whole store to localStorage on every write. Anyone with the device, a browser profile backup, or an XSS foothold could read it. Nothing had to be exfiltrated through the network.",
+        items: [
+          "A live Firebase JWT with access to production data paths.",
+          "Mobile money API credentials that should only ever exist server-side.",
+          "Plaintext passwords retained in a client object long after the login call.",
+        ],
+      },
+      {
         heading: "Root cause",
         body:
-          "There was no DTO or field-projection layer between the backend response and the client store. The API returned full record objects, the frontend hydrated its store with them, and the persistence middleware faithfully serialized the store to disk. Three individually reasonable decisions producing one serious exposure.",
+          "There was no DTO or field-projection layer between the backend response and the client store. The API returned full record objects, the frontend hydrated its store with them, and the persistence middleware faithfully serialized the store to disk. Three individually reasonable decisions producing one serious exposure. The API returned full records, the UI put them in a store, and the store persisted everything. No layer asked which fields the client actually needed.",
       },
       {
         heading: "Why this is a class of bug, not a one-off",
         body:
-          "Any stack that combines an ORM returning full models, an API without response shaping, and a persisted client store has the same exposure latent in it. The fix is architectural — introduce projection at the API boundary — not a patch applied to the storage call.",
+          "Any stack that combines an ORM returning full models, an API without response shaping, and a persisted client store has the same exposure latent in it. The same shape appears in Redux Persist, Zustand persist, Pinia, NgRx, React Query persist and hand-rolled localStorage caches. It also appears in mobile apps that mirror API responses into SharedPreferences, UserDefaults or a WebView store. The state library is not at fault. The absence of a projection boundary is.",
+      },
+      {
+        heading: "Storage is the symptom; trust boundaries are the bug",
+        items: [
+          "localStorage and sessionStorage are readable by any script in the origin. An XSS is a full credential compromise, not a defacement.",
+          "IndexedDB and Cache Storage hold larger objects and survive far longer than a tab; a service worker can cache responses containing secrets.",
+          "Client-side encryption does not fix this when the key ships to the client. It changes the encoding, not the trust boundary.",
+          "Mobile backups, debug logs, crash reports and WebView storage extend the same exposure off-browser.",
+          "The only durable rule: if the client never receives the secret, no client-side store can leak it.",
+        ],
+      },
+      {
+        heading: "The same exposure across identity platforms",
+        items: [
+          "Firebase: ID and refresh tokens persist by default; custom claims are authorization data and must be set server-side; App Check attests the app, not the user; API keys are public identifiers whose safety depends entirely on rules.",
+          "AWS Cognito and Amplify: the default token cache is browser storage; identity pools can mint AWS credentials for unauthenticated users; unauthenticated roles must be scoped to almost nothing; server-rendered apps should prefer cookie storage or a backend-for-frontend.",
+          "Microsoft Entra ID and MSAL: cacheLocation decides whether tokens live in memory, sessionStorage or localStorage; refresh tokens and scopes need explicit review; conditional access does not compensate for a token that XSS can read.",
+          "Auth0 and generic OIDC: SPA SDKs store tokens in the browser unless you adopt the BFF pattern; PKCE protects the code exchange, not the token after issuance; refresh-token rotation limits the blast radius but does not remove it.",
+          "Supabase: the anon key is designed to be public; Row Level Security is the actual boundary; the service_role key must never ship to a client; JWT expiry and refresh policy decide how long a leaked token survives.",
+          "Custom JWT: localStorage is XSS-readable; httpOnly Secure SameSite cookies are not script-readable but need CSRF care; in-memory access tokens with a refresh cookie are a reasonable middle ground.",
+          "Mobile: Keychain and Keystore are the right home for refresh tokens; SharedPreferences, UserDefaults, WebView localStorage, logs and device backups are where they usually end up instead.",
+        ],
+      },
+      {
+        heading: "Response shaping and serverless backends",
+        items: [
+          "Serverless removes the application server but not the need for a serialization boundary. API Gateway mappings, Lambda handlers, Cloud Functions callables, Azure Functions and Supabase RPC all return whatever you let them return.",
+          "Return a DTO with an allowlist, not an ORM model. Field-level authorization belongs next to the query, not in the component that happens to render it.",
+          "GraphQL needs field-level checks and query-cost limits; a single resolver returning a full user object defeats the schema's apparent safety.",
+          "Tenant isolation belongs in the data layer: Firestore rules, DynamoDB leading keys and condition expressions, Cosmos DB partition keys plus RBAC, Postgres RLS, or D1 queries scoped by tenant.",
+          "Never return secrets, internal identifiers, password hashes or provider credentials, even to an authenticated administrator. Admin is a role, not a licence to leak.",
+        ],
+      },
+      {
+        heading: "Third-party credentials are the worst offenders",
+        items: [
+          "Mobile money, SMS, email, maps and payment integrations usually ship a key to the client because it is the fastest path to a demo. The same key then sits in a bundle anyone can download.",
+          "Separate publishable keys from secret keys. A publishable key identifies a project; a secret key authorises spending, messaging or data access.",
+          "Proxy privileged third-party calls through a backend or serverless function, with per-user rate limits, scoped tokens and rotation.",
+          "Rotate anything that has ever been in a client bundle. Removing it from the next release does not remove it from the old one.",
+        ],
+      },
+      {
+        heading: "Detection: assume the bundle is public",
+        items: [
+          "Read the production bundle and source maps; search for token patterns, provider key prefixes, internal hostnames and mobile money identifiers.",
+          "Inspect localStorage, sessionStorage, IndexedDB, Cache Storage and cookies after a normal login, not only after an attack.",
+          "Add secret scanning to CI and pre-commit hooks, plus dependency review so a new SDK does not silently add a persisted token cache.",
+          "Use CSP and Trusted Types to reduce XSS reach, and monitor token use for anomalous geography, velocity or scope.",
+          "Plant canary credentials in client-accessible configuration and alert on their use. A canary that fires is a detection win; one that never fires costs nothing.",
+        ],
+      },
+      {
+        heading: "Remediation that removes the class",
+        items: [
+          "Introduce projection at the API boundary and delete sensitive fields before they reach the store.",
+          "Stop persisting whole stores; persist only non-sensitive UI state, with an explicit allowlist.",
+          "Move refresh tokens to httpOnly Secure SameSite cookies or a BFF; keep access tokens short-lived and in memory where possible.",
+          "Revoke and rotate every credential that was exposed, then shorten TTLs and scope keys to the minimum.",
+          "Add contract tests that fail when a response gains an unexpected sensitive field, and lint rules that block persistence of auth slices.",
+          "Treat mobile storage as a separate surface: Keychain or Keystore for tokens, no secrets in logs, backups excluded where appropriate.",
+        ],
+      },
+      {
+        heading: "Checklist across platforms",
+        items: [
+          "Firebase: rules tested with the emulator; App Check enforced; custom claims set only by trusted code.",
+          "AWS: Cognito unauthenticated roles empty; API Gateway authorizers on every route; Lambda roles scoped per function.",
+          "Azure: Entra token audience and tenant validated; Functions auth level not anonymous by accident; managed identities for service calls.",
+          "Supabase: RLS enabled on every table; service_role absent from client bundles; storage policies match table policies.",
+          "Cloudflare and edge platforms: secrets bound per environment; preview deployments protected; JWTs verified at the edge, not just decoded.",
+          "Mobile: Keychain or Keystore, no secrets in logs, backup rules reviewed.",
+        ],
       },
     ],
-    stack: ["Firebase", "JWT", "Redux-style persistence", "OWASP API Top 10"],
+    stack: [
+      "Firebase",
+      "JWT",
+      "Redux-style persistence",
+      "OWASP API Top 10",
+      "AWS Cognito",
+      "Azure Entra / MSAL",
+      "Auth0 / OIDC",
+      "Supabase RLS",
+      "Browser storage APIs",
+    ],
     whyItMatters:
-      "A reusable pattern finding. The interesting part is the middleware, not the client.",
+      "A reusable pattern finding. The interesting part is the missing boundary, not the storage call — and the same boundary is missing on every identity platform until someone tests it.",
     featured: true,
   },
   {
     slug: "firestore-rules-assessment",
-    title: "Serverless Firestore misconfiguration assessment",
+    title: "Serverless security beyond Firestore rules",
     kind: "audit",
     client: "An internal platform",
     summary:
-      "Open collections, an unauthenticated admin dashboard, and rules that looked correct.",
+      "Open collections, an unauthenticated admin dashboard, and rules that looked correct — reviewed against the failure modes that recur across Firebase, AWS, Azure, Supabase and Cloudflare.",
     standfirst:
-      "A penetration test of a Firebase-hosted internal platform surfaced open Firestore collections and an administrative dashboard reachable without authentication. The detail worth the whole writeup was subtler: allow list had been used where allow read was meant.",
+      "A penetration test of a Firebase-hosted internal platform surfaced open Firestore collections and an administrative dashboard reachable without authentication. The detail worth the whole writeup was subtler: 'allow list' had been used where 'allow read' was meant. The rule-level bug was the entry point; the durable lesson is that serverless security is a property of identity, data-plane authorization, function roles and deployment discipline — and those fail the same way on every provider.",
     figures: [
       { value: "3", label: "classes of exposure confirmed" },
+      { value: "5", label: "platform models in the cross-provider checklist" },
     ],
     sections: [
       {
         heading: "The rule that reads correctly and isn't",
         body:
-          "The distinction between list and read permissions in Firestore rules is subtle enough that a ruleset can pass a casual review, behave correctly on the common path, and still permit direct document access the author believed was blocked. Rules are code, and they need the same adversarial reading as the application they protect.",
+          "The distinction between list and read permissions in Firestore rules is subtle enough that a ruleset can pass a casual review, behave correctly on the common path, and still permit direct document access the author believed was blocked. A query can be denied while a direct document get is allowed, or the reverse, depending on how the rule is written. The browser SDK talks to the data plane directly, so there is no server-side controller to catch what the rule misses. Rules are code, and they need the same adversarial reading and tests as the application they protect.",
       },
       {
         heading: "Also found",
@@ -293,30 +390,116 @@ export const ENGAGEMENTS: Engagement[] = [
           "Incomplete security rules across several collection paths.",
         ],
       },
+      {
+        heading: "Serverless moves the perimeter into configuration",
+        body:
+          "In a traditional stack, the application server is a chokepoint: every request passes through code you can review, instrument and patch. In a serverless stack the client talks to a managed data plane, the identity provider mints the token, and the only thing standing between a user and another tenant's data is a rules file, an IAM policy or a row-level security policy. There is no bastion host to scan and no middleware to add a check to. The configuration is the security control, and it is usually deployed by a different pipeline from the application.",
+      },
+      {
+        heading: "The same failure modes, provider by provider",
+        items: [
+          "Firebase and Google Cloud: Firestore and Storage rules; callable functions must validate the auth context; App Check is attestation, not authorization; service-account IAM and Cloud Run ingress decide what the backend can reach; Secret Manager instead of environment variables.",
+          "AWS: Cognito user and identity pools, API Gateway authorizers, Lambda execution roles, DynamoDB condition expressions and leading keys, S3 Block Public Access and presigned URLs, and resource policies on EventBridge, SNS and SQS that can invite a confused-deputy call.",
+          "Azure: Entra ID app registrations and token audience, Functions auth levels and function keys, Cosmos DB data-plane RBAC and partition-key design, Blob SAS scope and stored access policies, managed identities and Key Vault references.",
+          "Supabase and Postgres: RLS enabled on every table, separate policies for select, insert, update and delete, security-definer functions with a fixed search_path, anon versus service_role key handling, and storage policies that mirror table policies.",
+          "Cloudflare: Workers with D1, R2 and KV bindings; Access or JWT verification at the edge; WAF and rate limits; per-environment secrets; preview URLs that are not public by default.",
+          "Vercel and Netlify: edge function environment scoping, preview deployments, build logs and deploy protection. A preview URL with production secrets is a production incident with a staging hostname.",
+        ],
+      },
+      {
+        heading: "Identity is the only front door",
+        items: [
+          "Validate the token, not its presence: signature, issuer, audience, expiry and revocation. A decoded JWT is not a verified JWT.",
+          "Roles and tenant IDs belong in server-issued claims, never in a request body the client controls. Refresh claims when roles change; stale claims are stale authorization.",
+          "Cognito identity pools can issue AWS credentials to unauthenticated users. If you enable that path, scope the role to almost nothing and log its use.",
+          "Entra and OIDC integrations need tenant and audience checks; a token from the wrong app or tenant must fail closed.",
+          "Supabase's anon key is public by design. RLS is the boundary; the service_role key bypasses RLS and must never reach a browser or a mobile bundle.",
+          "Firebase App Check reduces abuse of your project by unattested clients, but it does not tell you who the user is. Do not use it as an authorization decision.",
+        ],
+      },
+      {
+        heading: "Function and event security",
+        items: [
+          "Validate event payloads. Lambda events, Pub/Sub messages, queue bodies and webhook payloads are attacker-controlled input, not trusted internal calls.",
+          "Give each function its own role or identity. A shared execution role turns one compromised function into the union of every permission in the account.",
+          "Check the source on resource policies: an SNS topic or S3 bucket that can invoke a function from another account is a confused deputy waiting to happen.",
+          "Use a secret manager with rotation; environment variables are visible to anyone who can read the function configuration and often end up in logs.",
+          "Bound recursion, concurrency and timeouts; add dead-letter queues and idempotency keys so a retry storm does not become a billing incident.",
+          "Treat dependencies and base images as part of the perimeter: pin, scan and rebuild on a schedule.",
+        ],
+      },
+      {
+        heading: "Storage and signed URLs",
+        items: [
+          "Block public access at the account or project level, then allow the specific bucket or container you mean.",
+          "Scope presigned URLs by method, object, content type and a short expiry. Never sign a prefix that covers other tenants.",
+          "Mirror storage authorization to data authorization: Firebase Storage rules, S3 bucket policies, Azure SAS and R2 bindings all need the same tenant check as the database.",
+          "Watch metadata: object names, content types and error messages can enumerate users or internal structure even when the bytes are protected.",
+        ],
+      },
+      {
+        heading: "The authorization tests that generalize",
+        items: [
+          "Unauthenticated direct read and write against every collection, table, bucket and function.",
+          "Authenticated cross-tenant read: sign in as tenant A and request tenant B's object by ID.",
+          "list versus get: test the query path and the direct-document path separately; a rule can deny one and allow the other.",
+          "Field-level projection: confirm the response does not include password hashes, internal IDs, provider credentials or another user's PII.",
+          "Function invocation outside the UI: call the function directly with a valid token but the wrong role or tenant.",
+          "Token tampering: change the audience, issuer, tenant or role claim and confirm the service rejects it.",
+          "Expired and revoked tokens: confirm they fail, and that refresh cannot resurrect a revoked session.",
+          "Signed URL reuse after expiry, and with a different method or content type.",
+          "Rules drift: compare the deployed rules, IAM policies and RLS policies against the repository, environment by environment.",
+          "Bulk export and error enumeration: pagination, CSV endpoints and verbose errors often bypass UI-level checks.",
+        ],
+      },
+      {
+        heading: "Deployment drift is the quiet failure",
+        items: [
+          "Rules, IAM and RLS are code. Keep them in version control, review them like application code, and deploy them with the app.",
+          "Test with the provider's emulator or a local stand-in: Firestore emulator, LocalStack, Azurite, Supabase CLI, Miniflare.",
+          "Stage a rule diff and a rollback path; a permissive rule pushed at 2 a.m. should be reversible in one command.",
+          "Alert on denied-request spikes, auth failures and function errors. A sudden drop in denials can mean someone found a path that no longer denies.",
+          "Audit service accounts and CI identities on a schedule; a stale deploy key with owner rights is the serverless equivalent of a forgotten VPN account.",
+          "Keep preview and production projects separate, with separate credentials and data.",
+        ],
+      },
+      {
+        heading: "What changed",
+        body:
+          "Corrected rule definitions were supplied to the development team: list and read were separated where the intent was per-document access, the administrative dashboard was put behind authentication, and the incomplete collection paths were closed. The direct-access paths were re-tested against the revised rules. The cross-provider checklist above is what I now run on every serverless review, regardless of vendor.",
+      },
     ],
-    stack: ["Firebase", "Firestore security rules", "Cloud Functions"],
+    stack: [
+      "Firebase",
+      "Firestore security rules",
+      "Cloud Functions",
+      "AWS IAM / Cognito",
+      "Azure Entra / Functions",
+      "Supabase RLS",
+      "Cloudflare Workers",
+    ],
     whyItMatters:
-      "Serverless shifts the authorization boundary into a rules file. Most reviews still do not read it adversarially.",
+      "Serverless shifts the authorization boundary into configuration. Most reviews still do not read that configuration adversarially — on any provider.",
   },
   {
     slug: "revenue-loss-analysis",
     title: "Revenue loss analysis through operational data",
     kind: "research",
-    client: "Transport and parking operations",
+    client: "target-company",
     summary:
-      "Vehicle category misclassification traced to a money figure a board could act on.",
+      "Item category misclassification traced to a money figure a board could act on.",
     standfirst:
-      "Not every security finding arrives through an exploit. Analysis across vehicle plate records identified a substantial revenue loss driven by category misclassification, reached entirely through data analysis.",
+      "Not every security finding arrives through an exploit. Analysis across item records identified a substantial revenue loss driven by category misclassification, reached entirely through data analysis.",
     figures: [
       { value: "KES 8.28M", label: "estimated revenue loss identified" },
-      { value: "297+", label: "vehicle plate records analysed" },
+      { value: "297+", label: "item records analysed" },
       { value: "73%", label: "of the loss from a single submitter group" },
     ],
     sections: [
       {
         heading: "What the analysis found",
         body:
-          "Vehicle category misclassification was the primary driver, and the loss was heavily concentrated: roughly 73 percent of the identified total traced back to one submitter group. Concentration like that changes the remediation from a systems problem into a controls-and-oversight problem.",
+          "Item category misclassification was the primary driver, and the loss was heavily concentrated: roughly 73 percent of the identified total traced back to one submitter group. Concentration like that changes the remediation from a systems problem into a controls-and-oversight problem.",
       },
       {
         heading: "Why it belongs in a security portfolio",
