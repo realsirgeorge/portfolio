@@ -6,8 +6,6 @@ import { ArrowLeft } from "lucide-react";
 import type { BlogPost } from "@/lib/blog-types";
 import { CopyButton } from "@/components/copy-button";
 import { CATEGORY_LABEL, formatDate } from "@/components/post-row";
-import { getAllTags, tagToSlug } from "@/lib/tags";
-import { KNIGHT_LABS } from "@/lib/site";
 
 function textOf(node: React.ReactNode): string {
   if (node == null || typeof node === "boolean") return "";
@@ -17,33 +15,6 @@ function textOf(node: React.ReactNode): string {
     return textOf((node.props as { children?: React.ReactNode }).children);
   }
   return "";
-}
-
-function headingId(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[`*_]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/** Top-level (##) headings, ignoring fenced code. */
-function extractHeadings(markdown: string): { id: string; text: string }[] {
-  const headings: { id: string; text: string }[] = [];
-  let fenced = false;
-  for (const line of markdown.split("\n")) {
-    if (line.trimStart().startsWith("```")) {
-      fenced = !fenced;
-      continue;
-    }
-    if (fenced) continue;
-    const match = /^##\s+(.+?)\s*#*\s*$/.exec(line);
-    if (!match) continue;
-    const text = match[1].replace(/[*_`]/g, "").trim();
-    const id = headingId(text);
-    if (text && id) headings.push({ id, text });
-  }
-  return headings;
 }
 
 /** Server-rendered markdown. Raw HTML in posts is not rendered (no rehype-raw). */
@@ -79,24 +50,9 @@ function Markdown({ content }: { content: string }) {
         },
         img: ({ src, alt }) => (
           // Post images live on the runtime volume or public/; dimensions are unknown.
+          // eslint-disable-next-line @next/next/no-img-element
           <img src={typeof src === "string" ? src : undefined} alt={alt || ""} loading="lazy" decoding="async" />
         ),
-        h2: ({ children }) => {
-          const text = textOf(children);
-          return (
-            <h2 id={headingId(text)} className="scroll-mt-24">
-              {children}
-            </h2>
-          );
-        },
-        h3: ({ children }) => {
-          const text = textOf(children);
-          return (
-            <h3 id={headingId(text)} className="scroll-mt-24">
-              {children}
-            </h3>
-          );
-        },
         table: ({ children }) => (
           <div className="overflow-x-auto">
             <table>{children}</table>
@@ -110,14 +66,6 @@ function Markdown({ content }: { content: string }) {
 }
 
 export function BlogPostContent({ post, related }: { post: BlogPost; related: BlogPost[] }) {
-  const headings = extractHeadings(post.content);
-  // Only link tags that have a substantive archive; one-post tags stay plain.
-  const archiveTags = new Set(
-    getAllTags()
-      .filter((t) => t.count >= 2)
-      .map((t) => t.slug)
-  );
-
   return (
     <article>
       <header className="container-prose pt-10 pb-10 sm:pt-14">
@@ -145,25 +93,6 @@ export function BlogPostContent({ post, related }: { post: BlogPost; related: Bl
       </header>
 
       <div className="container-prose">
-        {headings.length >= 3 && (
-          <nav aria-labelledby="toc-heading" className="mb-10 border-y border-border py-5">
-            <p id="toc-heading" className="eyebrow mb-3">
-              In this post
-            </p>
-            <ol className="grid gap-x-8 gap-y-1.5 sm:grid-cols-2">
-              {headings.map((heading) => (
-                <li key={heading.id}>
-                  <a
-                    href={`#${heading.id}`}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {heading.text}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )}
         <div className="prose-article">
           <Markdown content={post.content} />
         </div>
@@ -171,45 +100,11 @@ export function BlogPostContent({ post, related }: { post: BlogPost; related: Bl
         {post.tags.length > 0 && (
           <ul className="mt-12 flex flex-wrap gap-2 border-t border-border pt-6" aria-label="Tags">
             {post.tags.map((tag) => (
-              <li key={tag}>
-                {archiveTags.has(tagToSlug(tag)) ? (
-                  <Link
-                    href={`/blog/tag/${tagToSlug(tag)}`}
-                    className="tag transition-colors hover:border-foreground hover:text-foreground"
-                  >
-                    {tag}
-                  </Link>
-                ) : (
-                  <span className="tag">{tag}</span>
-                )}
-              </li>
+              <li key={tag} className="tag">{tag}</li>
             ))}
           </ul>
         )}
       </div>
-
-      <aside className="container-prose mt-16 border-t border-border pt-8" aria-labelledby="author-heading">
-        <p id="author-heading" className="eyebrow eyebrow-accent">
-          About the author
-        </p>
-        <p className="mt-3 max-w-2xl font-display text-xl leading-snug text-foreground">
-          George Wanyoike (&ldquo;Sir G&rdquo;) is a security practitioner in Nairobi. He
-          runs full-scope audits, owns and operates an ISP, and founded Knight Labs.
-        </p>
-        <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
-          Client work is anonymised by contract. The methodology, the tooling and
-          the mistakes are documented here so the next person does not have to
-          rediscover them.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-4 text-sm">
-          <Link href="/about" className="link-quiet text-foreground">About George</Link>
-          <Link href="/work" className="link-quiet text-foreground">Engagements</Link>
-          <a href={KNIGHT_LABS.url} rel="noopener" className="link-quiet text-foreground">
-            Knight Labs
-          </a>
-          <Link href="/contact" className="link-quiet text-foreground">Get in touch</Link>
-        </div>
-      </aside>
 
       {related.length > 0 && (
         <aside className="container-prose mt-16" aria-labelledby="related-heading">

@@ -29,11 +29,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# environment files — never commit real secrets
-.env
-.env.*
-!.env.example
-!.env.local.example
+# env files (keep .env, ignore .env.local and other .env*.local)
+.env*.local
 
 # vercel
 .vercel
@@ -41,9 +38,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# local deploy artifacts
-/.deploy-runtime/
 
 # backups
 /backups/

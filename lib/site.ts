@@ -26,6 +26,6 @@ export const NAV_LINKS = [
   { href: "/knight-labs", label: "Knight Labs" },
   { href: "/about", label: "About" },
   { href: "/blog", label: "Writing" },
-  { href: "/open-for-work", label: "Hire" },
+  { href: "/infrastructure", label: "Lab" },
   { href: "/library", label: "Library" },
 ] as const;

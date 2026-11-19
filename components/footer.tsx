@@ -8,7 +8,7 @@ const COLUMNS = [
     title: "Practice",
     links: [
       { href: "/work", label: "Work" },
-      { href: "/open-for-work", label: "Open for work" },
+      { href: "/infrastructure", label: "The Lab" },
       { href: "/library", label: "Library" },
       { href: "/blog", label: "Writing" },
     ],
